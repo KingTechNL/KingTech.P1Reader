@@ -13,7 +13,7 @@ The KingTech P1 Reader is published as a Docker image.
 The Docker image can be used to run the P1 reader in a container.
 
 ## NuGet
-The KingTech P1 Reader is published as NuGet.
+The KingTech P1 Reader is published as [NuGet package](https://www.nuget.org/packages/KingTech.P1Reader.NuGet/).
 The NuGet can be used by any C# application to receive events from the P1 port. 
 
 ## Example P1 telegram message
