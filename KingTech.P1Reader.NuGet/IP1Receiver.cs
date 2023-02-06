@@ -1,4 +1,4 @@
-﻿namespace KingTech.P1Reader.NuGet;
+﻿namespace KingTech.P1Reader;
 
 /// <summary>
 /// The P1 receiver is responsible for receiving and parsing P1 messages using the given configuration.

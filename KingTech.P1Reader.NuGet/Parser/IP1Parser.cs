@@ -1,4 +1,4 @@
-﻿namespace KingTech.P1Reader.NuGet.Parser;
+﻿namespace KingTech.P1Reader.Parser;
 
 /// <summary>
 /// Parser for telegrams containing P1 messages.

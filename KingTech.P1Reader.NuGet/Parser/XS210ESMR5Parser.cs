@@ -1,4 +1,4 @@
-﻿namespace KingTech.P1Reader.NuGet.Parser;
+﻿namespace KingTech.P1Reader.Parser;
 
 /// <summary>
 /// Parser for XS210ESMR5 messages.
@@ -49,6 +49,7 @@ internal class XS210ESMR5Parser : ABaseP1Parser
         if (telegramLines.Count > 0)
         {
             var timestamp = ParseTimestamp(telegramLines, KeyTimestamp);
+            var rawTimestamp = ParseLong(telegramLines, KeyTimestamp);
             var electricityUsageHigh = ParseDouble(telegramLines, KeyElectricityUsageHigh);
             var electricityUsageLow = ParseDouble(telegramLines, KeyElectricityUsageLow);
             var electricityReturnedHigh = ParseDouble(telegramLines, KeyElectricityReturnedHigh);
@@ -63,6 +64,7 @@ internal class XS210ESMR5Parser : ABaseP1Parser
             return new P1Message()
             {
                 Timestamp = timestamp,
+                RawTimestamp = rawTimestamp,
                 ElectricityUsageHigh = electricityUsageHigh,
                 ElectricityUsageLow = electricityUsageLow,
                 ElectricityReturnedHigh = electricityReturnedHigh,

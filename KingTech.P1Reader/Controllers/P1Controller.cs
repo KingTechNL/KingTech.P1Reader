@@ -1,5 +1,4 @@
 using System.Net.Mime;
-using KingTech.P1Reader.NuGet;
 using KingTech.P1Reader.Services;
 using Microsoft.AspNetCore.Mvc;
 

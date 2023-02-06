@@ -1,4 +1,4 @@
-﻿namespace KingTech.P1Reader.NuGet;
+﻿namespace KingTech.P1Reader;
 
 public class P1ReceiverSettings
 {

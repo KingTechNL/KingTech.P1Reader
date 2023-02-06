@@ -1,6 +1,7 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 
-namespace KingTech.P1Reader.NuGet.Parser;
+namespace KingTech.P1Reader.Parser;
 
 /// <summary>
 /// Base class for parsing P1 messages.
@@ -121,15 +122,20 @@ internal abstract class ABaseP1Parser : IP1Parser
     /// <param name="dict">The dictionary to parse the long from.</param>
     /// <param name="key">The key to find the value to parse in the dictionary.</param>
     /// <param name="index">The index of the value to parse in the list value.</param>
-    protected long ParseTimestamp(Dictionary<string, List<string>> dict, string key, int index = 0)
+    protected DateTime? ParseTimestamp(Dictionary<string, List<string>> dict, string key, int index = 0)
     {
         if (!dict.TryGetValue(key, out var value))
-            return 0;
-
+            return null;
         var correctedString = TrimValue(value[index]);
-        if (long.TryParse(correctedString, out var result))
+
+        if (DateTime.TryParseExact(
+                correctedString, 
+                "yyMMddHHmmss", 
+                CultureInfo.InvariantCulture, 
+                DateTimeStyles.None, 
+                out var result))
             return result;
-        return 0;
+        return null;
     }
 
     /// <summary>

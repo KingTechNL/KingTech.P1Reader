@@ -1,7 +1,7 @@
-﻿using KingTech.P1Reader.NuGet.Parser;
+﻿using KingTech.P1Reader.Parser;
 using Microsoft.Extensions.Logging;
 
-namespace KingTech.P1Reader.NuGet;
+namespace KingTech.P1Reader;
 
 /// <inheritdoc/>
 public class P1Receiver : IP1Receiver

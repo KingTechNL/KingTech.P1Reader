@@ -1,9 +1,10 @@
-﻿namespace KingTech.P1Reader.NuGet;
+﻿namespace KingTech.P1Reader;
 
 public record P1Message
 {
-
-    public long Timestamp { get; set; }//int64
+    public DateTime? Timestamp { get; set; }//datetime
+    
+    public long RawTimestamp { get; set; }//int64
 
     public double ElectricityUsageLow { get; set; }//float64
 

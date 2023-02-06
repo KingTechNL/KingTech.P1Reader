@@ -1,7 +1,7 @@
 ﻿using System.IO.Ports;
 using System.Text;
 
-namespace KingTech.P1Reader.NuGet.SerialReader;
+namespace KingTech.P1Reader.SerialReader;
 
 internal class SerialReader
 {

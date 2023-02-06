@@ -1,5 +1,4 @@
-﻿using KingTech.P1Reader.NuGet;
-using Prometheus;
+﻿using Prometheus;
 
 namespace KingTech.P1Reader.Services;
 
