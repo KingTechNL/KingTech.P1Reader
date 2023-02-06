@@ -9,5 +9,5 @@ EXPOSE 80
 EXPOSE 443
 RUN apk --no-cache add curl
 
-COPY KingTech.P1Reader/bin/Release/net6.0/ .
+COPY KingTech.P1Reader/bin/Release/net6.0 .
 ENTRYPOINT ["dotnet", "KingTech.P1Reader.dll"]
