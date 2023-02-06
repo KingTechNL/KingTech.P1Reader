@@ -1,0 +1,39 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33213.308
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KingTech.P1Reader.NuGet", "KingTech.P1Reader.NuGet\KingTech.P1Reader.NuGet.csproj", "{C229DEF6-F10A-447D-AF25-48D2115BCDB4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KingTech.P1Reader", "KingTech.P1Reader\KingTech.P1Reader.csproj", "{8FA83C5B-3718-4A45-ADBB-0FC14DCD9015}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution items", "Solution items", "{CCD379AF-832A-41C8-9327-233D1C2DCA16}"
+	ProjectSection(SolutionItems) = preProject
+		.dockerignore = .dockerignore
+		.gitignore = .gitignore
+		Dockerfile = Dockerfile
+		LICENSE = LICENSE
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C229DEF6-F10A-447D-AF25-48D2115BCDB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C229DEF6-F10A-447D-AF25-48D2115BCDB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C229DEF6-F10A-447D-AF25-48D2115BCDB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C229DEF6-F10A-447D-AF25-48D2115BCDB4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8FA83C5B-3718-4A45-ADBB-0FC14DCD9015}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8FA83C5B-3718-4A45-ADBB-0FC14DCD9015}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8FA83C5B-3718-4A45-ADBB-0FC14DCD9015}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8FA83C5B-3718-4A45-ADBB-0FC14DCD9015}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A1330ABD-F762-4B2E-86E6-5A5CC7DE9BD6}
+	EndGlobalSection
+EndGlobal
