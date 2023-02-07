@@ -350,3 +350,4 @@ ASALocalRun/
 ![Ss]hared/[Ll]ib/**/*.dll
 !UnitTests/*.exe
 !DemoTestData/*.exe
+/KingTech.P1Reader/.config

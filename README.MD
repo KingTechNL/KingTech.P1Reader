@@ -53,7 +53,7 @@ The `P1Receiver` object requires a `P1ReceiverSettings` object to configure the 
 
 To open the connection with the serial port and start listening for incomming messages, call the `Start()` method on the `P1Receiver`. To close the connection again the `Stop()` method.
 
-## Development
+# Development
 This repository is split into 2 projects. The [KingTech.P1Receiver.NuGet](#nuget) project which handles the connection with the P1 port, and the KingTech.P1Receiver project that exposes this data.
 
 To support more P1 formats, new implementations of the `P1Parser` can be added to the KingTech.P1Receiver.NuGet project. By adding it to the case switch in the `GetParser()` method in the `P1Receiver` class.
@@ -203,3 +203,63 @@ In addition to the metrics endpoint, the data is also exposed in json format. Fo
   "gasUsage": 6929.3193
 }
 ```
+
+
+
+# P1 Format
+The full [P1 format](https://www.netbeheernederland.nl/_upload/Files/Slimme_meter_15_a727fce1f1.pdf) specification (V5.0.2) consists of the fields listed below. Depending on your device some fields may or may not be included.
+
+| Value | OBIS reference | Attribute | Class ID | Value Format | Value Unit |
+| --- | --- | --- | --- | --- | --- |
+| Header information | - | - | - | Manufacturer specific | |
+| Version information <br> for P1 output | 1-3:0.2.8.255 | 2 | 1 Data | S2, tag 9 | |
+| Date-time stamp <br> of the P1 message | 0-0:1.0.0.255 | 2 | 8 | TST | YYMMDDhhmmssX |
+| Equipment <br> identifier | 0-0:96.1.1.255 | 2 Value | 1 Data | Sn (n=0..96), tag 9 | |
+| Meter Reading <br> electricity delivered <br> to client (Tariff 1) in <br> 0,001 kWh | 1-0:1.8.1.255 | 2 Value | 3 Register | F9(3,3), tag 6 | kWh |
+| Meter Reading <br> electricity delivered <br> to client (Tariff 2) in <br> 0,001 kWh | 1-0:1.8.2.255 | 2 Value | 3 Register | F9(3,3), tag 6 | kWh |
+| Meter Reading <br> electricity delivered <br> by client (Tariff 1) in <br> 0,001 kWh |1-0:2.8.1.255 | 2 Value | 3 Register | F9(3,3), tag 6 | kWh |
+| Tariff indicator electricity. <br> The tariff indicator can also be <br> used to switch tariff <br> dependent loads <br> e.g boilers. This is <br> the responsibility of <br> the P1 user | 0-0:96.14.0.255 | 2 Value | 1 Data | S4, tag 9 | |
+| Actual electricity <br> power delivered <br> (+P) in 1 Watt resolution | 1-0:1.7.0.255 | 2 Value | 3 Register | F5(3,3), tag 18 | kW |
+| Actual electricity <br> power received (-P) <br> in 1 Watt resolution | 1-0:2.7.0.255 | 2 Value | 3 Register | F5(3,3), tag 18 | kW |
+| Number of power <br> failures in any <br> phase | 0-0:96.7.21.255 | 2 Value | 1 Data | F5(0,0), tag 18 | |
+| Number of long <br> power failures in <br> any phase | 0-0:96.7.9.255 | 2 Value | 1 Data | F5(0,0), tag 18 | |
+| Power Failure Event Log (long power failures) | 1-0:99.97.0.255 | 2 Buffer | 7 Profile Generic | TST, F10(0,0) - tag 6 Format applicable for the value within the log (OBIS code 0-0:96.7.19.255) | Timestamp (end of failure) – duration in seconds |
+| Number of voltage sags in phase L1 | 1-0:32.32.0.255 | 2 Value | 1 Data | F5(0,0), tag 18 |
+| Number of voltage sags in phase L2 | 1-0:52.32.0.255 | 2 Value | 1 Data | F5(0,0), tag 18 |
+| Number of voltage sags in phase L3 | 1-0:72.32.0.255 | 2 Value | 1 Data | F5(0,0), tag 18 |
+| Number of voltage swells in phase L1 | 1-0:32.36.0.255 | 2 Value | 1 Data | F5(0,0),  tag 18 |
+| Number of voltage swells in phase L2 | 1-0:52.36.0.255 | 2 Value | 1 Data | F5(0,0),  tag 18 |
+| Number of voltage swells in phase L3 | 1-0:72.36.0.255 | 2 Value | 1 Data | F5(0,0),  tag 18 |
+| Text message max 1024 characters. | 0-0:96.13.0.255 | 2 Value | 1 Data | Sn (n=0..2048), tag 9 |
+| Instantaneous voltage L1 in V resolution | 1-0:32.7.0.255 | 2 Value | 3 Register | F4(1,1), tag 18 | V |
+| Instantaneous voltage L2 in V resolution | 1-0:52.7.0.255 | 2 Value | 3 Register | F4(1,1), tag 18 | V |
+| Instantaneous voltage L3 in V resolution | 1-0:72.7.0.255 | 2 Value | 3 Register | F4(1,1), tag 18 | V |
+| Instantaneous current L1 in A resolution. | 1-0:31.7.0.255 | 2 Value | 3 Register | F3(0,0), tag 18 | A |
+| Instantaneous current L2 in A resolution. | 1-0:51.7.0.255 | 2 Value | 3 Register | F3(0,0), tag 18 | A |
+| Instantaneous current L3 in A resolution. | 1-0:71.7.0.255 | 2 Value | 3 Register | F3(0,0), tag 18 | A |
+| Instantaneous active power L1 (+P) in W resolution | 1-0:21.7.0.255 | 2 Value | 3 Register | F5(3,3), tag 18 | kW |
+| Instantaneous active power L2 (+P) in W resolution | 1-0:41.7.0.255 | 2 Value | 3 Register | F5(3,3), tag 18 | kW |
+| Instantaneous active power L3 (+P) in W resolution | 1-0:61.7.0.255 | 2 Value | 3 Register | F5(3,3), tag 18 | kW |
+| Instantaneous active power L1 (-P) in W resolution | 1-0:22.7.0.255 | 2 Value | 3 Register | F5(3,3), tag 18 | kW |
+| Instantaneous active power L2 (-P) in W resolution | 1-0:42.7.0.255 | 2 Value | 3 Register | F5(3,3), tag 18 | kW |
+| Instantaneous active power L3 (-P) in W resolution | 1-0:62.7.0.255 | 2 Value | 3 Register | F5(3,3), tag 18 | kW |
+| Device-Type | 0-n:24.1.0.255  | 9 Device | type 72 M-Bus client | F3(0,0), tag 17 |
+| Equipment identifier (Gas) | 0-n:96.1.0.255 | 2 Value | 1 Data | Sn (n=0..96), tag 9 |
+| Last 5-minute value (temperature converted), gas delivered to client in m3, including decimal values and capture time | 0-n:24.2.1.255 | 5 Capture time | 4 Extended Register | TST |
+| Last 5-minute value (temperature converted), gas delivered to client in m3, including decimal values and capture time | 0-n:24.2.1.255 | 2 Value | 4 Extended Register | F8(2,2)/F8(3,3), tag 18 (See note 2) | m3 |
+| Device-Type | 0-n:24.1.0.255 | 9 Device type | 72 M-Bus client F3(0,0), tag 17 |
+| Equipment identifier (Thermal: Heat or Cold) | 0-n:96.1.0.255 | 2 Value | 1 Data | Sn (n=0..96), tag 9 |
+| Last 5-minute Meter reading Heat or Cold in 0,01 GJ and capture time | 0-n:24.2.1.255 | 5 Capture time | 4 Extended Register | TST |
+| Last 5-minute Meter reading Heat or Cold in 0,01 GJ and capture time | 0-n:24.2.1.255 | 2 Value | 4 Extended Register | Fn(2,2) (See note 1) | GJ |
+| Device-Type | 0-n:24.1.0.255 | 9 Device type | 72 M-Bus client | F3(0,0), tag 17 |
+| Equipment identifier (Water) | 0-n:96.1.0.255 | 2 Value | 1 Data | Sn (n=0..96), tag 9 |
+| Last 5-minute Meter reading in 0,001 m3 and capture time | 0-n:24.2.1.255 | 5 Capture time | 4 Extended Register | TST |
+| Last 5-minute Meter reading in 0,001 m3 and capture time | 0-n:24.2.1.255 | 2 Value | 4 Extended Register | Fn(3,3) (See Note 1) | m3 |
+| Device-Type | 0-n:24.1.0.255 | 9 Device type | 72 M-Bus client | F3(0,0), tag 17 |
+| Equipment identifier | 0-n:96.1.0.255 | 2 Value | 1 Data | Sn (n=0..96), tag 9 |
+| Last 5-minute Meter reading and capture time (e.g. slave E meter) | 0-n:24.2.1.255 | 5 Capture time | 4 Extended Register | TST |
+| Last 5-minute Meter reading and capture time (e.g. slave E meter) | 0-n:24.2.1.255 | 2 Value | 4 Extended Register | Fn(3,3) (See Note 1) | kWh |
+
+Note 1: Where n is the number of digits before the decimal point on the display of the meter + the required number of decimals. So for example if on the physical display of a Heat meter is shown 1234 GJ (without decimals) the n=6 and the format of the P1 output will be 1234,56 GJ.
+
+Note 2: For Gas meters with a capacity up to 10 m3 /h (G4 and G6) F8(3,3) is  applicable. For Gas meters with higher capacities F8(2,2) is applicable.
