@@ -63,7 +63,7 @@ public class MetricService
     /// </summary>
     public void Start()
     {
-        _receiver.TelegramReceived += SetValues;
+        _receiver.OnTelegramReceived += SetValues;
     }
 
     /// <summary>
@@ -71,18 +71,17 @@ public class MetricService
     /// </summary>
     public void Stop()
     {
-        _receiver.TelegramReceived -= SetValues;
+        _receiver.OnTelegramReceived -= SetValues;
     }
 
     /// <summary>
     /// Set values for metric endpoints.
     /// </summary>
-    /// <param name="sender"></param>
     /// <param name="p1Message"></param>
-    private void SetValues(object? sender, P1Message p1Message)
+    private Task SetValues(P1Message p1Message)
     {
-        if(p1Message == null)
-            return;
+        if (p1Message == null)
+            return Task.CompletedTask;
 
         _logger.LogTrace("Setting values for metrics");
 
@@ -133,6 +132,8 @@ public class MetricService
         {
             SetModbusMetrics(p1Message);
         }
+
+        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -191,12 +192,17 @@ public class MetricService
     /// <param name="p1Message">The <see cref="P1Message"/> to get the modbus values from.</param>
     private void SetModbusMetrics(P1Message p1Message)
     {
+        var index = 0;
         foreach (var mbus in p1Message.MBusClients)
         {
+            //Get or create device identifier.
+            var id = mbus.DeviceIdentifier ?? (index+1).ToString();
+            index++;
+
             //Create new metrics if needed.
-            if (!_modbusMetrics.TryGetValue(mbus.DeviceIdentifier, out var metrics))
+            if (!_modbusMetrics.TryGetValue(id, out var metrics))
             {
-                var id = mbus.DeviceIdentifier ?? (_modbusMetrics.Count + 1).ToString();
+                _logger.LogInformation("Adding new modbus device {id}", id);
                 metrics = new ModbusMetrics()
                 {
                     ModbusDeviceType = Metrics.CreateGauge($"p1_mbus_{id}_device_type", $"Modbus client {id} device type"),
@@ -204,7 +210,7 @@ public class MetricService
                         $"Modbus client {id} metric capture time"),
                     ModbusValue = Metrics.CreateGauge($"p1_mbus_{id}_value", $"Modbus client {id} metric value")
                 };
-                _modbusMetrics.Add(mbus.DeviceIdentifier, metrics);
+                _modbusMetrics.Add(id, metrics);
             }
 
             //Set values

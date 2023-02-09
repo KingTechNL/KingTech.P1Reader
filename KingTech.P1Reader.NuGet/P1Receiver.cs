@@ -1,6 +1,8 @@
 ﻿using KingTech.P1Reader.Message;
 using KingTech.P1Reader.Parser;
+using KingTech.P1Reader.SerialReader;
 using Microsoft.Extensions.Logging;
+using static KingTech.P1Reader.IP1Receiver;
 
 namespace KingTech.P1Reader;
 
@@ -11,12 +13,12 @@ public class P1Receiver : IP1Receiver
     public P1Message? LastTelegram { get; private set; }
 
     /// <inheritdoc/>
-    public event EventHandler<P1Message>? TelegramReceived;
+    public TelegramReceivedEvent OnTelegramReceived { get; set; }
 
     private readonly ILogger<P1Receiver> _logger;
     private readonly IP1Parser _parser;
 
-    private readonly SerialReader.SerialReader _serialReader;
+    private readonly ISerialReader _serialReader;
 
     /// <summary>
     /// The P1 receiver is responsible for receiving and parsing P1 messages using the given configuration.
@@ -28,7 +30,9 @@ public class P1Receiver : IP1Receiver
         _logger = loggerFactory.CreateLogger<P1Receiver>();
 
         _parser = GetParser(settings.Format);
-        _serialReader = new SerialReader.SerialReader(settings.SerialPort, HandleTelegram);
+        _serialReader = settings.SerialPort.ToUpper() == "DUMMY" 
+            ? new SerialReader.DummyReader(HandleTelegram)
+            : new SerialReader.SerialReader(settings.SerialPort, HandleTelegram);
     }
 
     /// <inheritdoc/>
@@ -58,7 +62,8 @@ public class P1Receiver : IP1Receiver
 
         //Update values.
         LastTelegram = telegram;
-        TelegramReceived?.Invoke(this, LastTelegram);
+
+        OnTelegramReceived?.Invoke(LastTelegram).Wait();
     }
 
     /// <summary>
@@ -68,13 +73,15 @@ public class P1Receiver : IP1Receiver
     /// <returns>The telegram parser for the given name.</returns>
     private IP1Parser GetParser(string format)
     {
-        switch (format)
+        switch (format.ToUpper())
         {
             case "XS210ESMR5":
                 return new XS210ESMR5Parser();
+            case "V502":
+                return new V502Parser();
             default:
-                _logger.LogError("Unknown format: {format}. Using default format: XS210ESMR5", format);
-                return new XS210ESMR5Parser();
+                _logger.LogError("Unknown format: {format}. Using default format: v502", format);
+                return new V502Parser();
         }
     }
 }

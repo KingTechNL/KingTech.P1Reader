@@ -34,7 +34,7 @@ internal abstract class ABaseP1Parser : IP1Parser
         var values = telegram.Split('\n').Select(SplitTelegramLine);
         foreach (var value in values)
             if (value.Count() > 1)
-                result.Add(value[0], value.GetRange(1, value.Count - 1));
+                result.TryAdd(value[0], value.GetRange(1, value.Count - 1));
         return result;
     }
 

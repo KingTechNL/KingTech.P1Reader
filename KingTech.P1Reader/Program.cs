@@ -1,3 +1,4 @@
+using Flurl.Http.Configuration;
 using KingTech.P1Reader;
 using KingTech.P1Reader.Services;
 using Prometheus;
@@ -11,9 +12,15 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Configure<P1ReceiverSettings>();
+// Register P1 receiver.
+builder.Configure<P1ReceiverSettings>(new P1ReceiverSettings());
 builder.Services.AddSingleton<IP1Receiver, P1Receiver>();
+// Register prometheus metrics service.
 builder.Services.AddSingleton<MetricService>();
+// Register DSMR reader publisher.
+builder.Configure<DsmrReaderPublisherSettings>(new DsmrReaderPublisherSettings());
+builder.Services.AddSingleton<IFlurlClientFactory, DefaultFlurlClientFactory>();
+builder.Services.AddSingleton<DsmrReaderPublisherService>();
 
 var app = builder.Build();
 
@@ -35,6 +42,7 @@ app.MapControllers();
 //Start listening
 app.Services.GetService<IP1Receiver>()?.Start();
 app.Services.GetService<MetricService>()?.Start();
+app.Services.GetService<DsmrReaderPublisherService>()?.Start();
 
 //Start web application.
 app.Run();
@@ -42,3 +50,4 @@ app.Run();
 //Shutdown.
 app.Services.GetService<IP1Receiver>()?.Stop();
 app.Services.GetService<MetricService>()?.Stop();
+app.Services.GetService<DsmrReaderPublisherService>()?.Stop();

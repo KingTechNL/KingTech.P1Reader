@@ -3,7 +3,7 @@ using System.Text;
 
 namespace KingTech.P1Reader.SerialReader;
 
-internal class SerialReader
+internal class SerialReader : ISerialReader
 {
     private SerialPort _serialPort;
     private Action<string> _onMessageReceived;
