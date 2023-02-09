@@ -1,4 +1,6 @@
-﻿namespace KingTech.P1Reader.Parser;
+﻿using KingTech.P1Reader.Message;
+
+namespace KingTech.P1Reader.Parser;
 
 /// <summary>
 /// Parser for XS210ESMR5 messages.
@@ -49,7 +51,7 @@ internal class XS210ESMR5Parser : ABaseP1Parser
         if (telegramLines.Count > 0)
         {
             var timestamp = ParseTimestamp(telegramLines, KeyTimestamp);
-            var rawTimestamp = ParseLong(telegramLines, KeyTimestamp);
+            var rawTimestamp = ParseString(telegramLines, KeyTimestamp);
             var electricityUsageHigh = ParseDouble(telegramLines, KeyElectricityUsageHigh);
             var electricityUsageLow = ParseDouble(telegramLines, KeyElectricityUsageLow);
             var electricityReturnedHigh = ParseDouble(telegramLines, KeyElectricityReturnedHigh);
@@ -69,12 +71,12 @@ internal class XS210ESMR5Parser : ABaseP1Parser
                 ElectricityUsageLow = electricityUsageLow,
                 ElectricityReturnedHigh = electricityReturnedHigh,
                 ElectricityReturnedLow = electricityReturnedLow,
-                ActiveTariff = activeTariff,
+                TariffIndicator = activeTariff,
                 PowerFailuresLong = powerFailuresLong,
                 PowerFailuresShort = powerFailureShort,
                 ActualElectricityDelivered = actualElectricityDelivered,
-                ActualElectricityRetreived = actualElectricityRetreived,
-                GasUsage = gasUsage,
+                ActualElectricityRetrieved = actualElectricityRetreived,
+                MBusClients = new List<MBusClient>(){new(){Value = gasUsage } },
             };
         }
 

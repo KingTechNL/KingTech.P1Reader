@@ -1,58 +1,55 @@
-﻿using Prometheus;
+﻿using KingTech.P1Reader.Message;
+using Prometheus;
 
 namespace KingTech.P1Reader.Services;
 
 /// <summary>
 /// This service adds p1 metrics to the prometheus metrics endpoint.
-/// The following metrics will be exposed:
-///
-/// # HELP p1_active_tariff Active tariff
-/// # TYPE p1_active_tariff gauge
-/// p1_active_tariff 2
-/// # HELP p1_current_usage_electricity_high Electricity currently used high tariff
-/// # TYPE p1_current_usage_electricity_high gauge
-/// p1_current_usage_electricity_high 0
-/// # HELP p1_current_usage_electricity_low Electricity currently used low tariff
-/// # TYPE p1_current_usage_electricity_low gauge
-/// p1_current_usage_electricity_low 0.2
-/// # HELP p1_power_failures_long Power failures long
-/// # TYPE p1_power_failures_long gauge
-/// p1_power_failures_long 2
-/// # HELP p1_power_failures_short Power failures short
-/// # TYPE p1_power_failures_short gauge
-/// p1_power_failures_short 57
-/// # HELP p1_returned_electricity_high Electricity returned high tariff
-/// # TYPE p1_returned_electricity_high gauge
-/// p1_returned_electricity_high 0
-/// # HELP p1_returned_electricity_low Electricity returned low tariff
-/// v# TYPE p1_returned_electricity_low gauge
-/// p1_returned_electricity_low 0.016
-/// # HELP p1_usage_electricity_high Electricity usage high tariff
-/// # TYPE p1_usage_electricity_high gauge
-/// p1_usage_electricity_high 1225.59
-/// # HELP p1_usage_electricity_low Electricity usage low tariff
-/// # TYPE p1_usage_electricity_low gauge
-/// p1_usage_electricity_low 1179.186
-/// # HELP p1_usage_gas Gas usage
-/// # TYPE p1_usage_gas gauge
-/// p1_usage_gas 1019.003
+/// A unique metric is added for every numeric value in the P1 spec.
 /// </summary>
 public class MetricService
 {
     private readonly ILogger<MetricService> _logger;
     private readonly IP1Receiver _receiver;
 
-    private Gauge _activeTariff;
+    private Gauge _versionInformation;
+    private Gauge _timestamp;
+    private Gauge _electricityUsageHigh;
+    private Gauge _electricityUsageLow;
+    private Gauge _electricityReturnedHigh;
+    private Gauge _electricityReturnedLow;
+    private Gauge _tariffIndicator;
     private Gauge _actualElectricityDelivered;
-    private Gauge _actualElectricityRetreived;
+    private Gauge _actualElectricityRetrieved;
     private Gauge _powerFailuresLong;
     private Gauge _powerFailuresShort;
-    private Gauge _returnedElectricityHigh;
-    private Gauge _returnedElectricityLow;
-    private Gauge _usageElectricityHigh;
-    private Gauge _usageElectricityLow;
-    private Gauge _usageGas;
+    private Gauge _voltageSagsL1;
+    private Gauge _voltageSagsL2;
+    private Gauge _voltageSagsL3;
+    private Gauge _voltageSwellsL1;
+    private Gauge _voltageSwellsL2;
+    private Gauge _voltageSwellsL3;
+    private Gauge _voltageL1;
+    private Gauge _voltageL2;
+    private Gauge _voltageL3;
+    private Gauge _currentL1;
+    private Gauge _currentL2;
+    private Gauge _currentL3;
+    private Gauge _powerDeliveredL1;
+    private Gauge _powerDeliveredL2;
+    private Gauge _powerDeliveredL3;
+    private Gauge _powerReceivedL1;
+    private Gauge _powerReceivedL2;
+    private Gauge _powerReceivedL3;
 
+    private Dictionary<string, ModbusMetrics> _modbusMetrics = new();
+
+    /// <summary>
+    /// This service adds p1 metrics to the prometheus metrics endpoint.
+    /// A unique metric is added for every numeric value in the P1 spec.
+    /// </summary>
+    /// <param name="logger"><see cref="ILogger"/> for this service.</param>
+    /// <param name="receiver">The <see cref="IP1Receiver"/> to subscribe to new P1 messages.</param>
     public MetricService(ILogger<MetricService> logger, IP1Receiver receiver)
     {
         _logger = logger;
@@ -61,11 +58,17 @@ public class MetricService
         AddMetrics();
     }
 
+    /// <summary>
+    /// Start listening for P1 messages and update metric values accordingly.
+    /// </summary>
     public void Start()
     {
         _receiver.TelegramReceived += SetValues;
     }
 
+    /// <summary>
+    /// Stop listening for P1 messages.
+    /// </summary>
     public void Stop()
     {
         _receiver.TelegramReceived -= SetValues;
@@ -78,18 +81,58 @@ public class MetricService
     /// <param name="p1Message"></param>
     private void SetValues(object? sender, P1Message p1Message)
     {
+        if(p1Message == null)
+            return;
 
         _logger.LogTrace("Setting values for metrics");
-        _activeTariff.Set(p1Message.ActiveTariff);
-        _actualElectricityDelivered.Set(p1Message.ActualElectricityDelivered);
-        _actualElectricityRetreived.Set(p1Message.ActualElectricityRetreived);
-        _powerFailuresLong.Set(p1Message.PowerFailuresLong);
-        _powerFailuresShort.Set(p1Message.PowerFailuresShort);
-        _returnedElectricityHigh.Set(p1Message.ElectricityReturnedHigh);
-        _returnedElectricityLow.Set(p1Message.ElectricityReturnedLow);
-        _usageElectricityHigh.Set(p1Message.ElectricityUsageHigh);
-        _usageElectricityLow.Set(p1Message.ElectricityUsageLow);
-        _usageGas.Set(p1Message.GasUsage);
+
+        if (p1Message.Timestamp != null)
+            _timestamp.Set(p1Message.Timestamp.Value.ToFileTime());
+        TrySet(_versionInformation, p1Message.VersionInformation);
+        
+        TrySet(_tariffIndicator, p1Message.TariffIndicator);
+
+        TrySet(_electricityUsageHigh, p1Message.ElectricityUsageHigh);
+        TrySet(_electricityUsageLow, p1Message.ElectricityUsageLow);
+        
+        TrySet(_electricityReturnedHigh, p1Message.ElectricityReturnedHigh);
+        TrySet(_electricityReturnedLow, p1Message.ElectricityReturnedLow);
+
+        TrySet(_actualElectricityDelivered, p1Message.ActualElectricityDelivered);
+        TrySet(_actualElectricityRetrieved, p1Message.ActualElectricityRetrieved);
+        
+        TrySet(_powerFailuresLong, p1Message.PowerFailuresLong);
+        TrySet(_powerFailuresShort, p1Message.PowerFailuresShort);
+        
+        TrySet(_voltageSagsL1, p1Message.VoltageSagsL1);
+        TrySet(_voltageSagsL2, p1Message.VoltageSagsL2);
+        TrySet(_voltageSagsL3, p1Message.VoltageSagsL3);
+
+        TrySet(_voltageSwellsL1, p1Message.VoltageSwellsL1);
+        TrySet(_voltageSwellsL2, p1Message.VoltageSwellsL2);
+        TrySet(_voltageSwellsL3, p1Message.VoltageSwellsL3);
+
+        TrySet(_voltageL1, p1Message.VoltageL1);
+        TrySet(_voltageL2, p1Message.VoltageL1);
+        TrySet(_voltageL3, p1Message.VoltageL3);
+
+        TrySet(_currentL1, p1Message.CurrentL1);
+        TrySet(_currentL2, p1Message.CurrentL2);
+        TrySet(_currentL3, p1Message.CurrentL3);
+
+        TrySet(_powerDeliveredL1, p1Message.PowerDeliveredL1);
+        TrySet(_powerDeliveredL2, p1Message.PowerDeliveredL2);
+        TrySet(_powerDeliveredL3, p1Message.PowerDeliveredL3);
+
+        TrySet(_powerReceivedL1, p1Message.PowerReceivedL1);
+        TrySet(_powerReceivedL2, p1Message.PowerReceivedL2);
+        TrySet(_powerReceivedL3, p1Message.PowerReceivedL3);
+
+        //Handle all modbus clients.
+        if (p1Message.MBusClients != null)
+        {
+            SetModbusMetrics(p1Message);
+        }
     }
 
     /// <summary>
@@ -98,15 +141,84 @@ public class MetricService
     private void AddMetrics()
     {
         _logger.LogTrace("Adding metric endpoints for P1 values.");
-        _activeTariff = Metrics.CreateGauge("p1_active_tariff", "Active tariff");
-        _actualElectricityDelivered = Metrics.CreateGauge("p1_actual_electricity_delivered", "Electricity actually delivered");
-        _actualElectricityRetreived = Metrics.CreateGauge("p1_actual_electricity_retreived", "Electricity actually retreived");
-        _powerFailuresLong = Metrics.CreateGauge("p1_power_failures_long", "Power failures long");
-        _powerFailuresShort = Metrics.CreateGauge("p1_power_failures_short", "Power failures short");
-        _returnedElectricityHigh = Metrics.CreateGauge("p1_returned_electricity_high", "Electricity returned high tariff");
-        _returnedElectricityLow = Metrics.CreateGauge("p1_returned_electricity_low", "Electricity returned low tariff");
-        _usageElectricityHigh = Metrics.CreateGauge("p1_usage_electricity_high", "Electricity usage high tariff");
-        _usageElectricityLow = Metrics.CreateGauge("p1_usage_electricity_low", "Electricity usage low tariff");
-        _usageGas = Metrics.CreateGauge("p1_usage_gas", "Gas usage");
+
+        _versionInformation = Metrics.CreateGauge("p1_version", "Version of the P1 protocol used");
+        _timestamp = Metrics.CreateGauge("p1_timestamp", "Timestamp of the last known P1 message, format: YYMMDDhhmmssX");
+        _electricityUsageHigh = Metrics.CreateGauge("p1_usage_electricity_high", "Electricity usage high tariff in 0,001 kWh");
+        _electricityUsageLow = Metrics.CreateGauge("p1_usage_electricity_low", "Electricity usage low tariff in 0,001 kWh");
+        _electricityReturnedHigh = Metrics.CreateGauge("p1_returned_electricity_high", "Electricity returned high tariff in 0,001 kWh");
+        _electricityReturnedLow = Metrics.CreateGauge("p1_returned_electricity_low", "Electricity returned low tariff in 0,001 kWh");
+        _tariffIndicator = Metrics.CreateGauge("p1_tariff_indicator", "Active tariff");
+        _actualElectricityDelivered = Metrics.CreateGauge("p1_actual_electricity_delivered", "Actual electricity power delivered (+P) in 1 Watt resolution");
+        _actualElectricityRetrieved = Metrics.CreateGauge("p1_actual_electricity_retrieved", "Actual electricity power received (-P) in 1 Watt resolution");
+        _powerFailuresLong = Metrics.CreateGauge("p1_power_failures_long", "Number of power failures in any phase");
+        _powerFailuresShort = Metrics.CreateGauge("p1_power_failures_short", "Number of long power failures in any phase");
+        _voltageSagsL1 = Metrics.CreateGauge("p1_voltage_sags_l1", "Number of voltage sags in phase L1");
+        _voltageSagsL2 = Metrics.CreateGauge("p1_voltage_sags_l2", "Number of voltage sags in phase L2");
+        _voltageSagsL3 = Metrics.CreateGauge("p1_voltage_sags_l3", "Number of voltage sags in phase L3");
+        _voltageSwellsL1 = Metrics.CreateGauge("p1_voltage_swells_l1", "Number of voltage swells in phase L1");
+        _voltageSwellsL2 = Metrics.CreateGauge("p1_voltage_swells_l2", "Number of voltage swells in phase L2");
+        _voltageSwellsL3 = Metrics.CreateGauge("p1_voltage_swells_l3", "Number of voltage swells in phase L3");
+        _voltageL1 = Metrics.CreateGauge("p1_voltage_l1", "Instantaneous voltage for phase L1 in V resolution");
+        _voltageL2 = Metrics.CreateGauge("p1_voltage_l2", "Instantaneous voltage for phase L2 in V resolution");
+        _voltageL3 = Metrics.CreateGauge("p1_voltage_l3", "Instantaneous voltage for phase L3 in V resolution");
+        _currentL1 = Metrics.CreateGauge("p1_current_l1", "Instantaneous current for phase L1 in A resolution");
+        _currentL2 = Metrics.CreateGauge("p1_current_l2", "Instantaneous current for phase L2 in A resolution");
+        _currentL3 = Metrics.CreateGauge("p1_current_l3", "Instantaneous current for phase L3 in A resolution");
+        _powerDeliveredL1 = Metrics.CreateGauge("p1_power_delivered_l1", "Instantaneous active power delivered to phase L1 (-P) in W resolution");
+        _powerDeliveredL2 = Metrics.CreateGauge("p1_power_delivered_l2", "Instantaneous active power delivered to phase L2 (-P) in W resolution");
+        _powerDeliveredL3 = Metrics.CreateGauge("p1_power_delivered_l3", "Instantaneous active power delivered to phase L3 (-P) in W resolution");
+        _powerReceivedL1 = Metrics.CreateGauge("p1_power_received_l1", "Instantaneous active power received for phase L1 (-P) in W resolution");
+        _powerReceivedL2 = Metrics.CreateGauge("p1_power_received_l2", "Instantaneous active power received for phase L2 (-P) in W resolution");
+        _powerReceivedL3 = Metrics.CreateGauge("p1_power_received_l3", "Instantaneous active power received for phase L3 (-P) in W resolution");
+    }
+
+    /// <summary>
+    /// Set metrics for all P1 values.
+    /// </summary>
+    /// <param name="gauge">The gauge to set the value for.</param>
+    /// <param name="value">The value to set.</param>
+    private static void TrySet(Gauge gauge, double? value)
+    {
+        if (value != null)
+            gauge.Set(value.Value);
+    }
+
+
+    /// <summary>
+    /// Set metrics for all modbus devices.
+    /// </summary>
+    /// <param name="p1Message">The <see cref="P1Message"/> to get the modbus values from.</param>
+    private void SetModbusMetrics(P1Message p1Message)
+    {
+        foreach (var mbus in p1Message.MBusClients)
+        {
+            //Create new metrics if needed.
+            if (!_modbusMetrics.TryGetValue(mbus.DeviceIdentifier, out var metrics))
+            {
+                var id = mbus.DeviceIdentifier ?? (_modbusMetrics.Count + 1).ToString();
+                metrics = new ModbusMetrics()
+                {
+                    ModbusDeviceType = Metrics.CreateGauge($"p1_mbus_{id}_device_type", $"Modbus client {id} device type"),
+                    ModbusCaptureTime = Metrics.CreateGauge($"p1_mbus_{id}_capture_time",
+                        $"Modbus client {id} metric capture time"),
+                    ModbusValue = Metrics.CreateGauge($"p1_mbus_{id}_value", $"Modbus client {id} metric value")
+                };
+                _modbusMetrics.Add(mbus.DeviceIdentifier, metrics);
+            }
+
+            //Set values
+            if (mbus.CaptureTime != null)
+                metrics.ModbusCaptureTime.Set(mbus.CaptureTime.Value.ToFileTime());
+            TrySet(metrics.ModbusDeviceType, mbus.DeviceType);
+            TrySet(metrics.ModbusValue, mbus.Value);
+        }
+    }
+
+    private class ModbusMetrics
+    {
+        public Gauge ModbusDeviceType;
+        public Gauge ModbusCaptureTime;
+        public Gauge ModbusValue;
     }
 }

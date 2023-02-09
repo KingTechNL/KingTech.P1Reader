@@ -1,4 +1,5 @@
-﻿using KingTech.P1Reader.Parser;
+﻿using KingTech.P1Reader.Message;
+using KingTech.P1Reader.Parser;
 using Microsoft.Extensions.Logging;
 
 namespace KingTech.P1Reader;

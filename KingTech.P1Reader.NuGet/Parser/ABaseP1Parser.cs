@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Text;
+using KingTech.P1Reader.Message;
 
 namespace KingTech.P1Reader.Parser;
 
@@ -88,15 +89,19 @@ internal abstract class ABaseP1Parser : IP1Parser
     /// <param name="key">The key to find the value to parse in the dictionary.</param>
     /// <param name="index">The index of the value to parse in the list value.</param>
     /// <returns></returns>
-    protected long ParseLong(Dictionary<string, List<string>> dict, string key, int index = 0)
+    protected long? ParseLong(Dictionary<string, List<string>> dict, string key, int index = 0)
     {
+        //Get value
         if (!dict.TryGetValue(key, out var value))
-            return 0;
+            return null;
+        if (value.Count <= index)
+            return null;
 
+        //Parse value
         var correctedString = TrimValue(value[index]);
         if (long.TryParse(correctedString, out var result))
             return result;
-        return 0;
+        return null;
     }
 
     /// <summary>
@@ -105,15 +110,37 @@ internal abstract class ABaseP1Parser : IP1Parser
     /// <param name="dict">The dictionary to parse the long from.</param>
     /// <param name="key">The key to find the value to parse in the dictionary.</param>
     /// <param name="index">The index of the value to parse in the list value.</param>
-    protected double ParseDouble(Dictionary<string, List<string>> dict, string key, int index = 0)
+    protected double? ParseDouble(Dictionary<string, List<string>> dict, string key, int index = 0)
     {
+        //Get value
         if (!dict.TryGetValue(key, out var value))
-            return 0;
+            return null;
+        if (value.Count <= index)
+            return null;
 
+        //Parse value
         var correctedString = TrimValue(value[index]);
         if (double.TryParse(correctedString, out var result))
             return result;
-        return 0;
+        return null;
+    }
+
+    /// <summary>
+    /// Get a string value from the given dictionary.
+    /// </summary>
+    /// <param name="dict">The dictionary to retrieve the string from.</param>
+    /// <param name="key">The key to find the value to retrieve in the dictionary.</param>
+    /// <param name="index">The index of the value to retrieve in the list value.</param>
+    protected string? ParseString(Dictionary<string, List<string>> dict, string key, int index = 0)
+    {
+        //Get value
+        if (!dict.TryGetValue(key, out var value))
+            return null;
+        if (value.Count <= index)
+            return null;
+        
+        //Return value
+        return value[index];
     }
 
     /// <summary>
@@ -124,10 +151,14 @@ internal abstract class ABaseP1Parser : IP1Parser
     /// <param name="index">The index of the value to parse in the list value.</param>
     protected DateTime? ParseTimestamp(Dictionary<string, List<string>> dict, string key, int index = 0)
     {
+        //Get value
         if (!dict.TryGetValue(key, out var value))
             return null;
+        if (value.Count <= index)
+            return null;
+        
+        //Parse value
         var correctedString = TrimValue(value[index]);
-
         if (DateTime.TryParseExact(
                 correctedString, 
                 "yyMMddHHmmss", 
@@ -143,7 +174,7 @@ internal abstract class ABaseP1Parser : IP1Parser
     /// </summary>
     /// <param name="value">the string to trim.</param>
     /// <returns>The string without its numeric characters.</returns>
-    protected string TrimValue(string value)
+    private string TrimValue(string value)
     {
         //This is faster then using regex.
         var trimmedValue = new string(value.Where(c => c == '-' || c == '.' || (c >= '0' && c <= '9')).ToArray());
