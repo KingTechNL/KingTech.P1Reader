@@ -1,30 +1,39 @@
 ﻿using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace KingTech.P1Reader.SerialReader;
 
-public class DummyReader : ISerialReader
+internal class DummyReader : ISerialReader
 {
+    private ILogger<DummyReader>? _logger { get; }
     private Action<string> _onMessageReceived;
     private Thread _thread;
     private bool _isRunning = false;
 
-    public DummyReader(Action<string> onMessageReceived)
+    public DummyReader(ILogger<DummyReader>? logger, Action<string> onMessageReceived)
     {
+        _logger = logger;
         _onMessageReceived = onMessageReceived;
+
+        _logger?.LogWarning("Using Dummy reader. No real data will be used.");
     }
     
     public bool Start()
     {
+        _logger?.LogInformation("Starting Dummy reader...");
         _isRunning = true;
         _thread = new Thread(CreateDummyMessage);
         _thread.Start();
+        _logger?.LogInformation("Started dummy reader.");
         return true;
     }
 
     public bool Stop()
     {
+        _logger?.LogInformation("Stopping Dummy reader...");
         _isRunning = false;
         _thread.Join();
+        _logger?.LogInformation("Stopped dummy reader.");
         return true;
     }
 
@@ -59,8 +68,10 @@ public class DummyReader : ISerialReader
             sb.AppendLine("0-2:96.1.0(4730303332353635353433363436313137)");
             sb.AppendLine("0-2:24.2.1(230205164505W)(06919.956*m3)");
             sb.AppendLine("!8FF3");
+            
+            _logger?.LogInformation("Triggering new dummy message.");
             _onMessageReceived(sb.ToString());
-            Thread.Sleep(5000);
+            Thread.Sleep(TimeSpan.FromSeconds(5));
         }
     }
 }

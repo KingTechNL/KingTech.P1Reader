@@ -12,6 +12,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+//builder.Services.AddSingleton<MainService>();
+
 // Register P1 receiver.
 builder.Configure<P1ReceiverSettings>(new P1ReceiverSettings());
 builder.Services.AddSingleton<IP1Receiver, P1Receiver>();
@@ -39,15 +41,18 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
-//Start listening
-app.Services.GetService<IP1Receiver>()?.Start();
-app.Services.GetService<MetricService>()?.Start();
-app.Services.GetService<DsmrReaderPublisherService>()?.Start();
+//Set start and stop events.
+var lifeTime = app.Services.GetService<IHostApplicationLifetime>();
+lifeTime?.ApplicationStarted.Register(() => {
+    app.Services.GetService<IP1Receiver>()?.Start();
+    app.Services.GetService<MetricService>()?.Start();
+    app.Services.GetService<DsmrReaderPublisherService>()?.Start();
+});
+lifeTime?.ApplicationStopping.Register(() => {
+    app.Services.GetService<IP1Receiver>()?.Stop();
+    app.Services.GetService<MetricService>()?.Stop();
+    app.Services.GetService<DsmrReaderPublisherService>()?.Stop();
+});
 
 //Start web application.
 app.Run();
-
-//Shutdown.
-app.Services.GetService<IP1Receiver>()?.Stop();
-app.Services.GetService<MetricService>()?.Stop();
-app.Services.GetService<DsmrReaderPublisherService>()?.Stop();

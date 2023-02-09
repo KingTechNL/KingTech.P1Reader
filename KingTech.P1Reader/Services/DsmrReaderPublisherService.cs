@@ -1,7 +1,10 @@
-﻿using Flurl.Http;
+﻿using System.Net.Http.Headers;
+using System.Text;
+using Flurl.Http;
 using Flurl.Http.Configuration;
 using KingTech.P1Reader.Message;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace KingTech.P1Reader.Services;
 
@@ -12,13 +15,13 @@ namespace KingTech.P1Reader.Services;
 /// </summary>
 public class DsmrReaderPublisherService
 {
-    private const string PostUrl = "/api/v2/datalogger/dsmrreading";
-
     private readonly ILogger<DsmrReaderPublisherService> _logger;
     private readonly DsmrReaderPublisherSettings _settings;
     private readonly IP1Receiver _p1Receiver;
     private readonly IFlurlClient _dsmrClient;
+    
     private readonly CancellationTokenSource _cancellationTokenSource;
+    private bool _busy = false; //Bool blocking multiple concurrent requests.
 
     public DsmrReaderPublisherService(ILogger<DsmrReaderPublisherService> logger, DsmrReaderPublisherSettings settings, IP1Receiver p1Receiver, IFlurlClientFactory clientFactory)
     {
@@ -26,7 +29,7 @@ public class DsmrReaderPublisherService
         _settings = settings;
         _p1Receiver = p1Receiver;
         _dsmrClient = clientFactory.Get(settings.Host);
-        _cancellationTokenSource = new CancellationTokenSource(settings.Timeout);
+        _cancellationTokenSource = new CancellationTokenSource();
     }
 
     public void Start()
@@ -44,26 +47,35 @@ public class DsmrReaderPublisherService
 
     private async Task PushData(P1Message message)
     {
-        if(message == null || _cancellationTokenSource.IsCancellationRequested)
+        if(message == null || _cancellationTokenSource.IsCancellationRequested || _busy)
             return;
 
+        //Create contract.
         var contract = new DsmrContract(message);
 
+        //Create cancellation token that times out after the configured timeout, or is cancelled on service stop.
+        var cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(
+            _cancellationTokenSource.Token, 
+            new CancellationTokenSource(_settings.Timeout).Token).Token;
+
+        //Send data to DSMR Reader.
         try
         {
-            var url = Flurl.Url.Combine(_settings.Host, PostUrl);
+            _busy = true;
+            var url = Flurl.Url.Combine(_settings.Host, "/api/v2/datalogger/dsmrreading");
             var json = JsonConvert.SerializeObject(contract);
             _logger.LogTrace("Sending {@Contract} to DSMR Reader on {url}", json, url.ToString());
-            
+
             var apiResponse = await url
                 .WithHeader("Content-Type", "application/json")
                 .WithHeader("Authorization", $"Token {_settings.ApiKey}")
                 .WithClient(_dsmrClient)
-                .PostJsonAsync(contract, _cancellationTokenSource.Token);
+                .AllowHttpStatus("4xx")
+                .PostJsonAsync(contract, cancellationToken);
 
             if (apiResponse.StatusCode != 201)
             {
-                string? response = (await apiResponse.GetJsonAsync())?.ToString();
+                var response = await apiResponse.GetJsonAsync<JObject>();
                 _logger.LogError("Failed to push data to DSMR Reader. Status code: {StatusCode}, Response {@Response}",
                     apiResponse.StatusCode, response);
             }
@@ -72,6 +84,8 @@ public class DsmrReaderPublisherService
         {
             _logger.LogError(e, "Failed to push {@Data} to DSMR Reader", contract);
         }
+        
+        _busy = false;
     }
 
     private class DsmrContract

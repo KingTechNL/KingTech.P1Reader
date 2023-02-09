@@ -15,7 +15,7 @@ public class P1Receiver : IP1Receiver
     /// <inheritdoc/>
     public TelegramReceivedEvent OnTelegramReceived { get; set; }
 
-    private readonly ILogger<P1Receiver> _logger;
+    private readonly ILogger<P1Receiver>? _logger;
     private readonly IP1Parser _parser;
 
     private readonly ISerialReader _serialReader;
@@ -25,14 +25,14 @@ public class P1Receiver : IP1Receiver
     /// </summary>
     /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> to create loggers for the P1Receiver system.</param>
     /// <param name="settings">The <see cref="P1ReceiverSettings"/> for this receiver.</param>
-    public P1Receiver(ILoggerFactory loggerFactory, P1ReceiverSettings settings)
+    public P1Receiver(ILoggerFactory? loggerFactory, P1ReceiverSettings settings)
     {
-        _logger = loggerFactory.CreateLogger<P1Receiver>();
+        _logger = loggerFactory?.CreateLogger<P1Receiver>();
 
         _parser = GetParser(settings.Format);
         _serialReader = settings.SerialPort.ToUpper() == "DUMMY" 
-            ? new SerialReader.DummyReader(HandleTelegram)
-            : new SerialReader.SerialReader(settings.SerialPort, HandleTelegram);
+            ? new SerialReader.DummyReader(loggerFactory?.CreateLogger<DummyReader>(), HandleTelegram)
+            : new SerialReader.SerialReader(loggerFactory?.CreateLogger<SerialReader.SerialReader>(), settings.SerialPort, HandleTelegram);
     }
 
     /// <inheritdoc/>
@@ -53,7 +53,7 @@ public class P1Receiver : IP1Receiver
     /// <param name="telegramMessage">The telegram message to handle.</param>
     private void HandleTelegram(string telegramMessage)
     {
-        _logger.LogDebug("Received new message: {message}", telegramMessage);
+        _logger?.LogDebug("Received new message: {message}", telegramMessage);
 
         //Parse the message.
         var telegram = _parser.ParseTelegram(telegramMessage);
@@ -80,7 +80,7 @@ public class P1Receiver : IP1Receiver
             case "V502":
                 return new V502Parser();
             default:
-                _logger.LogError("Unknown format: {format}. Using default format: v502", format);
+                _logger?.LogError("Unknown format: {format}. Using default format: v502", format);
                 return new V502Parser();
         }
     }
