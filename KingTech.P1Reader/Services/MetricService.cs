@@ -1,4 +1,5 @@
-﻿using KingTech.P1Reader.Message;
+﻿using KingTech.P1Reader.Broker;
+using KingTech.P1Reader.Message;
 using Prometheus;
 
 namespace KingTech.P1Reader.Services;
@@ -10,7 +11,7 @@ namespace KingTech.P1Reader.Services;
 public class MetricService
 {
     private readonly ILogger<MetricService> _logger;
-    private readonly IP1Receiver _receiver;
+    private readonly IMessageBroker<P1Message> _messageBroker;
 
     private Gauge _versionInformation;
     private Gauge _timestamp;
@@ -49,11 +50,11 @@ public class MetricService
     /// A unique metric is added for every numeric value in the P1 spec.
     /// </summary>
     /// <param name="logger"><see cref="ILogger"/> for this service.</param>
-    /// <param name="receiver">The <see cref="IP1Receiver"/> to subscribe to new P1 messages.</param>
-    public MetricService(ILogger<MetricService> logger, IP1Receiver receiver)
+    /// <param name="messageBroker">The <see cref="IP1Receiver"/> to subscribe to new P1 messages.</param>
+    public MetricService(ILogger<MetricService> logger, IMessageBroker<P1Message> messageBroker)
     {
         _logger = logger;
-        _receiver = receiver;
+        _messageBroker = messageBroker;
 
         AddMetrics();
     }
@@ -63,7 +64,7 @@ public class MetricService
     /// </summary>
     public void Start()
     {
-        _receiver.OnTelegramReceived += SetValues;
+        _messageBroker.Subscribe(SetValues);
     }
 
     /// <summary>
@@ -71,22 +72,23 @@ public class MetricService
     /// </summary>
     public void Stop()
     {
-        _receiver.OnTelegramReceived -= SetValues;
+        _messageBroker.Unsubscribe(SetValues);
     }
 
     /// <summary>
     /// Set values for metric endpoints.
     /// </summary>
     /// <param name="p1Message"></param>
-    private Task SetValues(P1Message p1Message)
+    private void SetValues(P1Message? p1Message)
     {
         if (p1Message == null)
-            return Task.CompletedTask;
+            return;
 
         _logger.LogTrace("Setting values for metrics");
 
-        if (p1Message.Timestamp != null)
-            _timestamp.Set(p1Message.Timestamp.Value.ToFileTime());
+        var timestamp = p1Message.Timestamp ?? DateTime.Now;
+        _timestamp.Set(timestamp.ToFileTime());
+        
         TrySet(_versionInformation, p1Message.VersionInformation);
         
         TrySet(_tariffIndicator, p1Message.TariffIndicator);
@@ -132,8 +134,6 @@ public class MetricService
         {
             SetModbusMetrics(p1Message);
         }
-
-        return Task.CompletedTask;
     }
 
     /// <summary>

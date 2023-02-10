@@ -120,7 +120,7 @@ internal abstract class ABaseP1Parser : IP1Parser
 
         //Parse value
         var correctedString = TrimValue(value[index]);
-        if (double.TryParse(correctedString, out var result))
+        if (double.TryParse(correctedString, NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
             return result;
         return null;
     }
@@ -178,6 +178,6 @@ internal abstract class ABaseP1Parser : IP1Parser
     {
         //This is faster then using regex.
         var trimmedValue = new string(value.Where(c => c == '-' || c == '.' || (c >= '0' && c <= '9')).ToArray());
-        return trimmedValue.Replace('.', ',');
+        return trimmedValue;
     }
 }

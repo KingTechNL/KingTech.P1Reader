@@ -13,15 +13,6 @@ public interface IP1Receiver
     P1Message? LastTelegram { get; }
 
     /// <summary>
-    /// Event that is triggered whenever a new telegram is received via the P1 connection.
-    /// </summary>
-    public delegate Task TelegramReceivedEvent(P1Message telegram);
-    /// <summary>
-    /// Event that is triggered whenever a new telegram is received via the P1 connection.
-    /// </summary>
-    public TelegramReceivedEvent OnTelegramReceived { get; set; }
-
-    /// <summary>
     /// Start handling new P1 messages.
     /// </summary>
     void Start();

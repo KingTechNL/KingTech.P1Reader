@@ -1,22 +1,23 @@
 using Flurl.Http.Configuration;
 using KingTech.P1Reader;
+using KingTech.P1Reader.Broker;
+using KingTech.P1Reader.Message;
 using KingTech.P1Reader.Services;
 using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
+// Add controller endpoints.
 builder.Services.AddControllers();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-//builder.Services.AddSingleton<MainService>();
-
 // Register P1 receiver.
 builder.Configure<P1ReceiverSettings>(new P1ReceiverSettings());
-builder.Services.AddSingleton<IP1Receiver, P1Receiver>();
+builder.Services.AddSingleton<IP1Receiver, BrokerP1Receiver>();
+builder.Services.AddSingleton<IMessageBroker<P1Message>, GenericMessageBroker<P1Message>>();
 // Register prometheus metrics service.
 builder.Services.AddSingleton<MetricService>();
 // Register DSMR reader publisher.

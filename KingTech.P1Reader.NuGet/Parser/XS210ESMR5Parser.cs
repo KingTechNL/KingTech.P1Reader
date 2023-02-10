@@ -77,6 +77,7 @@ internal class XS210ESMR5Parser : ABaseP1Parser
                 ActualElectricityDelivered = actualElectricityDelivered,
                 ActualElectricityRetrieved = actualElectricityRetreived,
                 MBusClients = new List<MBusClient>(){new(){Value = gasUsage } },
+                RawMessage = telegram
             };
         }
 

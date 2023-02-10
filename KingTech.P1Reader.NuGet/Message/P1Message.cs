@@ -37,4 +37,9 @@ public class P1Message
     public double? PowerReceivedL3 { get; set; }
 
     public IEnumerable<MBusClient>? MBusClients { get; set; }
+
+    /// <summary>
+    /// The raw telegram message as received from the P1 port.
+    /// </summary>
+    public string RawMessage { get; set; } = string.Empty;
 }

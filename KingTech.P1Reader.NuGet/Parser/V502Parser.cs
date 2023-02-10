@@ -126,7 +126,8 @@ internal class V502Parser : ABaseP1Parser
                 PowerReceivedL1 = ParseDouble(telegramLines, KeyPowerReceivedL1),
                 PowerReceivedL2 = ParseDouble(telegramLines, KeyPowerReceivedL2),
                 PowerReceivedL3 = ParseDouble(telegramLines, KeyPowerReceivedL3),
-                MBusClients = GetMBusClients(telegramLines)
+                MBusClients = GetMBusClients(telegramLines),
+                RawMessage = telegram
             };
         }
 
@@ -141,9 +142,11 @@ internal class V502Parser : ABaseP1Parser
     private IEnumerable<MBusClient> GetMBusClients(Dictionary<string, List<string>> telegramLines)
     {
         //Get all device ID's
-        var mbusDevices = (from key in telegramLines.Keys select KeyMBusDeviceId.Match(key) into match where match.Success select match.Groups[1].Name).ToList();
-        mbusDevices.AddRange(from key in telegramLines.Keys select KeyMBusDeviceType.Match(key) into match where match.Success select match.Groups[1].Name);
-        mbusDevices.AddRange(from key in telegramLines.Keys select KeyMBusReading.Match(key) into match where match.Success select match.Groups[1].Name);
+        var mbusDevices = (from key in telegramLines.Keys select KeyMBusDeviceId.Match(key) into match where match.Success select match.Groups[1].Value).ToList();
+        mbusDevices.AddRange(from key in telegramLines.Keys select KeyMBusDeviceType.Match(key) into match where match.Success select match.Groups[1].Value);
+        mbusDevices.AddRange(from key in telegramLines.Keys select KeyMBusReading.Match(key) into match where match.Success select match.Groups[1].Value);
+
+        var x = GetMbusDeviceIndexes(telegramLines.Keys.ToList(), KeyMBusDeviceId);
 
         //Get all client data for each device.
         return mbusDevices.Distinct()
@@ -155,5 +158,19 @@ internal class V502Parser : ABaseP1Parser
                 RawCaptureTime = ParseLong(telegramLines, $"0-{device}:24.2.1"),
                 Value = ParseDouble(telegramLines, $"0-{device}:24.2.1", 1)
             });
+    }
+
+    private List<string> GetMbusDeviceIndexes(List<string> keys, Regex regex)
+    {
+        var indexes = new List<string>();
+        foreach (var key in keys)
+        {
+            var match = regex.Match(key);
+            if (match.Success)
+            {
+                indexes.Add(match.Groups[1].Name);
+            }
+        }
+        return indexes;
     }
 }

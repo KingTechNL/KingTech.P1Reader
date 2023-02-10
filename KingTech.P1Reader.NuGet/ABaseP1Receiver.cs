@@ -2,20 +2,16 @@
 using KingTech.P1Reader.Parser;
 using KingTech.P1Reader.SerialReader;
 using Microsoft.Extensions.Logging;
-using static KingTech.P1Reader.IP1Receiver;
 
 namespace KingTech.P1Reader;
 
 /// <inheritdoc/>
-public class P1Receiver : IP1Receiver
+public abstract class ABaseP1Receiver : IP1Receiver
 {
     /// <inheritdoc/>
     public P1Message? LastTelegram { get; private set; }
 
-    /// <inheritdoc/>
-    public TelegramReceivedEvent OnTelegramReceived { get; set; }
-
-    private readonly ILogger<P1Receiver>? _logger;
+    protected readonly ILogger<ABaseP1Receiver>? Logger;
     private readonly IP1Parser _parser;
 
     private readonly ISerialReader _serialReader;
@@ -25,24 +21,24 @@ public class P1Receiver : IP1Receiver
     /// </summary>
     /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> to create loggers for the P1Receiver system.</param>
     /// <param name="settings">The <see cref="P1ReceiverSettings"/> for this receiver.</param>
-    public P1Receiver(ILoggerFactory? loggerFactory, P1ReceiverSettings settings)
+    protected ABaseP1Receiver(ILoggerFactory? loggerFactory, P1ReceiverSettings settings)
     {
-        _logger = loggerFactory?.CreateLogger<P1Receiver>();
+        Logger = loggerFactory?.CreateLogger<ABaseP1Receiver>();
 
         _parser = GetParser(settings.Format);
-        _serialReader = settings.SerialPort.ToUpper() == "DUMMY" 
+        _serialReader = settings.SerialPort.ToUpper() == "DUMMY"
             ? new SerialReader.DummyReader(loggerFactory?.CreateLogger<DummyReader>(), HandleTelegram)
             : new SerialReader.SerialReader(loggerFactory?.CreateLogger<SerialReader.SerialReader>(), settings.SerialPort, HandleTelegram);
     }
 
     /// <inheritdoc/>
-    public void Start()
+    public virtual void Start()
     {
         _serialReader.Start();
     }
 
     /// <inheritdoc/>
-    public void Stop()
+    public virtual void Stop()
     {
         _serialReader.Stop();
     }
@@ -51,20 +47,26 @@ public class P1Receiver : IP1Receiver
     /// Handle an incoming telegram message.
     /// </summary>
     /// <param name="telegramMessage">The telegram message to handle.</param>
-    private void HandleTelegram(string telegramMessage)
+    protected virtual void HandleTelegram(string telegramMessage)
     {
-        _logger?.LogDebug("Received new message: {message}", telegramMessage);
+        Logger?.LogDebug("Received new message: {message}", telegramMessage);
 
         //Parse the message.
-        var telegram = _parser.ParseTelegram(telegramMessage);
-        if (telegram == null)
+        var message = _parser.ParseTelegram(telegramMessage);
+        if (message == null)
             return;
 
-        //Update values.
-        LastTelegram = telegram;
+        HandleP1Message(message);
 
-        OnTelegramReceived?.Invoke(LastTelegram).Wait();
+        //Update values.
+        LastTelegram = message;
     }
+
+    /// <summary>
+    /// Handle the incoming P1 message.
+    /// </summary>
+    /// <param name="message">The received and parsed P1 message.</param>
+    protected abstract void HandleP1Message(P1Message message);
 
     /// <summary>
     /// Get the telegram parser for the given format name.
@@ -80,7 +82,7 @@ public class P1Receiver : IP1Receiver
             case "V502":
                 return new V502Parser();
             default:
-                _logger?.LogError("Unknown format: {format}. Using default format: v502", format);
+                Logger?.LogError("Unknown format: {format}. Using default format: v502", format);
                 return new V502Parser();
         }
     }
