@@ -5,6 +5,7 @@
 ## See: https://github.com/github/gitignore/blob/master/VisualStudio.gitignore for more information
 
 **/settings-Debug.json
+**/appsettings.Development.json
 
 # User-specific files
 *.rsuser

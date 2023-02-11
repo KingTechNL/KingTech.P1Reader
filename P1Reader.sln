@@ -11,11 +11,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		.dockerignore = .dockerignore
 		.gitignore = .gitignore
+		appsettings.example.json = appsettings.example.json
 		Dockerfile = Dockerfile
 		.github\workflows\dotnet_build.yml = .github\workflows\dotnet_build.yml
 		LICENSE = LICENSE
 		README.MD = README.MD
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KingTech.P1Reader.UnitTests", "KingTech.P1Reader.UnitTests\KingTech.P1Reader.UnitTests.csproj", "{CA0E7EE4-54CD-411C-9674-697C28343F2C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,6 +34,10 @@ Global
 		{8FA83C5B-3718-4A45-ADBB-0FC14DCD9015}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8FA83C5B-3718-4A45-ADBB-0FC14DCD9015}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8FA83C5B-3718-4A45-ADBB-0FC14DCD9015}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA0E7EE4-54CD-411C-9674-697C28343F2C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA0E7EE4-54CD-411C-9674-697C28343F2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA0E7EE4-54CD-411C-9674-697C28343F2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA0E7EE4-54CD-411C-9674-697C28343F2C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
