@@ -1,15 +1,10 @@
-﻿using Microsoft.AspNetCore.Http.Features;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-
-namespace KingTech.P1Reader;
+﻿namespace KingTech.P1Reader;
 
 /// <summary>
 /// Extension methods for WebApplicationBuilder registration and configuration.
 /// </summary>
 public static class WebServiceExtensions
 {
-    private const string Corspolicy = "CorsPolicy";
-
     /// <summary>
     /// Load the given configuration/settings type using the ConfigurationManager and register it to the DI container.
     /// </summary>
@@ -54,19 +49,5 @@ public static class WebServiceExtensions
             builder.Services.AddSingleton(defaultValue);
             return defaultValue;
         }
-    }
-
-    /// <summary>
-    /// Get a specific configuration section from the configuration based on its name.
-    /// </summary>
-    /// <param name="configuration">The configuration to get the section from.</param>
-    /// <typeparam name="TConfigurationSection">The type of the configuration section to retrieve.</typeparam>
-    /// <returns>The requested configuration section from the configuration.</returns>
-    public static TConfigurationSection GetConfiguration<TConfigurationSection>(this IConfiguration configuration)
-    {
-        var config = configuration.GetSection(typeof(TConfigurationSection).Name);
-        if (config == null)
-            return default;
-        return config.Get<TConfigurationSection>();
     }
 }

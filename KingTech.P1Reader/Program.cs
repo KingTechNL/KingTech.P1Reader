@@ -1,19 +1,29 @@
+using Flurl.Http.Configuration;
 using KingTech.P1Reader;
-using KingTech.P1Reader.Services;
+using KingTech.P1Reader.Broker;
+using KingTech.P1Reader.Message;
+using KingTech.P1Reader.Publishers;
 using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
+// Add controller endpoints.
 builder.Services.AddControllers();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Configure<P1ReceiverSettings>();
-builder.Services.AddSingleton<IP1Receiver, P1Receiver>();
-builder.Services.AddSingleton<MetricService>();
+// Register P1 receiver.
+builder.Configure<P1ReceiverSettings>(new P1ReceiverSettings());
+builder.Services.AddSingleton<IP1Receiver, BrokerP1Receiver>();
+builder.Services.AddSingleton<IMessageBroker<P1Message>, GenericMessageBroker<P1Message>>();
+// Register prometheus metrics service.
+builder.Services.AddSingleton<PrometheusMetricPublisher>();
+// Register DSMR reader publisher.
+builder.Configure<DsmrReaderPublisherSettings>(new DsmrReaderPublisherSettings());
+builder.Services.AddSingleton<IFlurlClientFactory, DefaultFlurlClientFactory>();
+builder.Services.AddSingleton<DsmrReaderPublisher>();
 
 var app = builder.Build();
 
@@ -32,13 +42,18 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
-//Start listening
-app.Services.GetService<IP1Receiver>()?.Start();
-app.Services.GetService<MetricService>()?.Start();
+//Set start and stop events.
+var lifeTime = app.Services.GetService<IHostApplicationLifetime>();
+lifeTime?.ApplicationStarted.Register(() => {
+    app.Services.GetService<IP1Receiver>()?.Start();
+    app.Services.GetService<PrometheusMetricPublisher>()?.Start();
+    app.Services.GetService<DsmrReaderPublisher>()?.Start();
+});
+lifeTime?.ApplicationStopping.Register(() => {
+    app.Services.GetService<IP1Receiver>()?.Stop();
+    app.Services.GetService<PrometheusMetricPublisher>()?.Stop();
+    app.Services.GetService<DsmrReaderPublisher>()?.Stop();
+});
 
 //Start web application.
 app.Run();
-
-//Shutdown.
-app.Services.GetService<IP1Receiver>()?.Stop();
-app.Services.GetService<MetricService>()?.Stop();

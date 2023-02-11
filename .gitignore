@@ -5,6 +5,7 @@
 ## See: https://github.com/github/gitignore/blob/master/VisualStudio.gitignore for more information
 
 **/settings-Debug.json
+**/appsettings.Development.json
 
 # User-specific files
 *.rsuser
@@ -350,3 +351,4 @@ ASALocalRun/
 ![Ss]hared/[Ll]ib/**/*.dll
 !UnitTests/*.exe
 !DemoTestData/*.exe
+/KingTech.P1Reader/.config
