@@ -1,6 +1,6 @@
 using System.Net.Mime;
 using KingTech.P1Reader.Message;
-using KingTech.P1Reader.Model;
+using KingTech.P1Reader.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KingTech.P1Reader.Publishers;

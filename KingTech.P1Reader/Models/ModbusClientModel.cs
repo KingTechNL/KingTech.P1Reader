@@ -1,4 +1,4 @@
-﻿namespace KingTech.P1Reader.Model;
+﻿namespace KingTech.P1Reader.Models;
 
 /// <summary>
 /// Model for the data that is received from the ModbusClient.

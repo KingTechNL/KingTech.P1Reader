@@ -1,4 +1,4 @@
-﻿namespace KingTech.P1Reader.Model;
+﻿namespace KingTech.P1Reader.Models;
 
 /// <summary>
 /// Electricity measurements for a single phase.

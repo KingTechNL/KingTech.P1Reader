@@ -13,41 +13,9 @@ It is also possible to automatically push all data to [DSMR reader](https://gith
 The KingTech P1 Reader is published as a [docker image](https://hub.docker.com/repository/docker/kingtechnl/kingtech_p1reader/general), but can also be compiled to run stand-alone. 
 In addition to the web-application, a [NuGet package](https://www.nuget.org/packages/KingTech.P1Reader.NuGet/) is published for developers to handle data received from P1 ports.
 
-## Docker image
-The KingTech P1 Reader is published as a [docker image](https://hub.docker.com/repository/docker/kingtechnl/kingtech_p1reader/general).
-The Docker image can be used to run the P1 reader in a container.
-
-In order to run the docker container, the serial device needs to be mounted.
-The application can be configured by setting the following environment variables:
-
-The serial port can be specified, but also needs to corrospond to the mounted device.
-``` 
-P1ReceiverSettings__SerialPort=/dev/ttyUSB0 
-```
-The format of the telegram messages can be specified, by default it is XS210ESMR5.
-```
-P1ReceiverSettings__Format=XS210ESMR5
-```
-
-### Compose example
-
-```
-kingtech_p1reader
-  container_name: kingtech_p1reader
-  image: kingtechnl/kingtech_p1reader:latest
-  restart: always
-  devices:
-    - /dev/ttyUSB0:/dev/ttyUSB0
-  ports:
-    - 8888:80
-  environment:
-    - P1ReceiverSettings__SerialPort=/dev/ttyUSB0
-    - P1ReceiverSettings__Format=XS210ESMR5
-```
-
 ## Stand-alone
-The KingTech P1 Reader is also compiled and released as a stand-alone application.
-The application can be configured using the standard (asp).NET appsettings.json file.
+The KingTech P1 Reader is compiled and released as a stand-alone application.
+The application can be configured using the [standard (ASP).NET appsettings.json file](https://learn.microsoft.com/en-us/iis-administration/configuration/appsettings.json).
 An example of this configuration file is added to this repository.
 
 ### Installing as linux service
@@ -77,14 +45,56 @@ Optionally, the following command can be used to list all systemctl services:
 systemctl list-units --type=service 
 ```
 
+
+## Docker image
+The KingTech P1 Reader is also published as a [docker image](https://hub.docker.com/repository/docker/kingtechnl/kingtech_p1reader/general).
+The Docker image can be used to run the P1 reader in a container.
+
+In order to run the docker container, the serial device needs to be mounted.
+The application can be configured by setting the following environment variables:
+
+The serial port can be specified, but also needs to corrospond to the mounted device.
+``` 
+P1ReceiverSettings__SerialPort=/dev/ttyUSB0 
+```
+The format of the telegram messages can be specified, by default it is V502.
+```
+P1ReceiverSettings__Format=V502
+```
+
+### Compose example
+
+```
+kingtech_p1reader
+  container_name: kingtech_p1reader
+  image: kingtechnl/kingtech_p1reader:latest
+  restart: always
+  devices:
+    - /dev/ttyUSB0:/dev/ttyUSB0
+  ports:
+    - 8888:80
+  environment:
+    - P1ReceiverSettings__SerialPort=/dev/ttyUSB0
+    - P1ReceiverSettings__Format=V502
+    - DsmrReaderPublisherSettings__Host=http://192.168.1.99:7777
+    - DsmrReaderPublisherSettings__ApiKey=<DSMR API KEY>
+    - DsmrReaderPublisherSettings__Timeout=00:00:05
+```
+
 ## NuGet
 The KingTech P1 Reader is published as [NuGet package](https://www.nuget.org/packages/KingTech.P1Reader.NuGet/).
 The NuGet can be used by any C# application to receive events from the P1 port. 
 
-To receive messages, a `P1Receiver` object needs to be created. When using dependency injection, it is recommended to register this class as singleton as it actively listens on the specified serial port.
-The `P1Receiver` object requires a `P1ReceiverSettings` object to configure the serial port and message format.
+To receive messages, an `IP1Receiver` object needs to be created. When using dependency injection, it is recommended to register this interface as singleton as it actively listens on the specified serial port.
+`IP1Receiver` objects require a `P1ReceiverSettings` object to configure the serial port and message format.
 
-To open the connection with the serial port and start listening for incomming messages, call the `Start()` method on the `P1Receiver`. To close the connection again the `Stop()` method.
+The NuGet contains 2 implementations of the `IP1Receiver` interface. 
+- The `BasicP1Receiver` exposes received P1 messages as C# events. Applications can subscribe to these events and use the information as they see fit.
+- The `BrokerP1Receiver` exposes received P1 messages via a MessageBroker. This allows multiple classes to handle the incoming data on their own thread.
+
+All implementations of the interface expose the last received message via a public property.
+
+To open the connection with the serial port and start listening for incomming messages, call the `Start()` method on the `IP1Receiver`. To close the connection again the `Stop()` method.
 
 # Development
 This repository is split into 2 projects. The [KingTech.P1Receiver.NuGet](#nuget) project which handles the connection with the P1 port, and the KingTech.P1Receiver project that exposes this data.
