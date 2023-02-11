@@ -3,7 +3,8 @@
 namespace KingTech.P1Reader.Parser;
 
 /// <summary>
-/// Parser for XS210ESMR5 messages.
+/// Parser for messages from the XS210ESMR5 meter.
+/// This meter uses version 5.0.x of the DSMR standard.
 /// XS210ESMR5 messages look like this:
 /// 
 /// /XMX5<meter id>

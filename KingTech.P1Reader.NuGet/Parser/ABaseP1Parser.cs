@@ -24,12 +24,6 @@ internal abstract class ABaseP1Parser : IP1Parser
     /// <returns>Dictionary containing all P1 values.</returns>
     protected Dictionary<string, List<string>> ParseTelegramValues(string telegram)
     {
-        //var _regex = new Regex(@"(.*)(\((.*?)\))");
-        //var matches = _regex.Matches(telegram);
-        //return matches.Where(match => match.Success && match.Groups.Count > 2)
-        //    .Select(match => new KeyValuePair<string, string>(match.Groups[1].Value, match.Groups[2].Value))
-        //    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-
         var result = new Dictionary<string, List<string>>();
         var values = telegram.Split('\n').Select(SplitTelegramLine);
         foreach (var value in values)
@@ -88,7 +82,7 @@ internal abstract class ABaseP1Parser : IP1Parser
     /// <param name="dict">The dictionary to parse the long from.</param>
     /// <param name="key">The key to find the value to parse in the dictionary.</param>
     /// <param name="index">The index of the value to parse in the list value.</param>
-    /// <returns></returns>
+    /// <returns>The parsed long for the given key/index. Null if no such value exists.</returns>
     protected long? ParseLong(Dictionary<string, List<string>> dict, string key, int index = 0)
     {
         //Get value
@@ -110,6 +104,7 @@ internal abstract class ABaseP1Parser : IP1Parser
     /// <param name="dict">The dictionary to parse the long from.</param>
     /// <param name="key">The key to find the value to parse in the dictionary.</param>
     /// <param name="index">The index of the value to parse in the list value.</param>
+    /// <returns>The parsed long for the given key/index. Null if no such value exists.</returns>
     protected double? ParseDouble(Dictionary<string, List<string>> dict, string key, int index = 0)
     {
         //Get value
@@ -131,6 +126,7 @@ internal abstract class ABaseP1Parser : IP1Parser
     /// <param name="dict">The dictionary to retrieve the string from.</param>
     /// <param name="key">The key to find the value to retrieve in the dictionary.</param>
     /// <param name="index">The index of the value to retrieve in the list value.</param>
+    /// <returns>The raw string for the given key/index. Null if no such value exists.</returns>
     protected string? ParseString(Dictionary<string, List<string>> dict, string key, int index = 0)
     {
         //Get value
@@ -149,6 +145,7 @@ internal abstract class ABaseP1Parser : IP1Parser
     /// <param name="dict">The dictionary to parse the long from.</param>
     /// <param name="key">The key to find the value to parse in the dictionary.</param>
     /// <param name="index">The index of the value to parse in the list value.</param>
+    /// <returns>The parsed DateTime for the given key/index. Null if no such value exists.</returns>
     protected DateTime? ParseTimestamp(Dictionary<string, List<string>> dict, string key, int index = 0)
     {
         //Get value

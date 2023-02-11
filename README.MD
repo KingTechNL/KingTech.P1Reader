@@ -7,6 +7,7 @@ The P1 port is a serial port that is used to communicate with the smart meter. C
 serial cable. Using the KingTech P1 reader we can read incomming traffic from this serial connection.
 
 Received data is made available via (REST) API and Prometheus metrics.
+It is also possible to automatically push all data to [DSMR reader](https://github.com/dsmrreader/dsmr-reader).
 
 # Usage
 The KingTech P1 Reader is published as a [docker image](https://hub.docker.com/repository/docker/kingtechnl/kingtech_p1reader/general), but can also be compiled to run stand-alone. 
@@ -42,6 +43,38 @@ kingtech_p1reader
   environment:
     - P1ReceiverSettings__SerialPort=/dev/ttyUSB0
     - P1ReceiverSettings__Format=XS210ESMR5
+```
+
+## Stand-alone
+The KingTech P1 Reader is also compiled and released as a stand-alone application.
+The application can be configured using the standard (asp).NET appsettings.json file.
+An example of this configuration file is added to this repository.
+
+### Installing as linux service
+The application can be installed as a linux (ubuntu/debian) service. For this purpose, the `kingtech-p1reader.service` unit file is created. 
+In order to install the KingTech P1Reader, copy this file to the `/etc/systemd/system` directory and update the paths to the executable and working directory.
+
+Next, let us reload `systemctl` to make our new unit file visible.
+```
+sudo systemctl daemon-reload
+```
+Now enable our service using the command below:
+```
+sudo systemctl enable kingtech-p1reader.service
+```
+Finally, we start the service using the following command:
+```
+sudo systemctl start kingtech-p1reader.service
+```
+
+To make sure the service is running, the following command can be used:
+```
+systemctl status kingtech-p1reader
+```
+
+Optionally, the following command can be used to list all systemctl services:
+``` 
+systemctl list-units --type=service 
 ```
 
 ## NuGet
@@ -212,17 +245,18 @@ The full [P1 format](https://www.netbeheernederland.nl/_upload/Files/Slimme_mete
 | Value | OBIS reference | Attribute | Class ID | Value Format | Value Unit |
 | --- | --- | --- | --- | --- | --- |
 | Header information | - | - | - | Manufacturer specific | |
-| Version information <br> for P1 output | 1-3:0.2.8.255 | 2 | 1 Data | S2, tag 9 | |
-| Date-time stamp <br> of the P1 message | 0-0:1.0.0.255 | 2 | 8 | TST | YYMMDDhhmmssX |
-| Equipment <br> identifier | 0-0:96.1.1.255 | 2 Value | 1 Data | Sn (n=0..96), tag 9 | |
-| Meter Reading <br> electricity delivered <br> to client (Tariff 1) in <br> 0,001 kWh | 1-0:1.8.1.255 | 2 Value | 3 Register | F9(3,3), tag 6 | kWh |
-| Meter Reading <br> electricity delivered <br> to client (Tariff 2) in <br> 0,001 kWh | 1-0:1.8.2.255 | 2 Value | 3 Register | F9(3,3), tag 6 | kWh |
-| Meter Reading <br> electricity delivered <br> by client (Tariff 1) in <br> 0,001 kWh |1-0:2.8.1.255 | 2 Value | 3 Register | F9(3,3), tag 6 | kWh |
-| Tariff indicator electricity. <br> The tariff indicator can also be <br> used to switch tariff <br> dependent loads <br> e.g boilers. This is <br> the responsibility of <br> the P1 user | 0-0:96.14.0.255 | 2 Value | 1 Data | S4, tag 9 | |
-| Actual electricity <br> power delivered <br> (+P) in 1 Watt resolution | 1-0:1.7.0.255 | 2 Value | 3 Register | F5(3,3), tag 18 | kW |
-| Actual electricity <br> power received (-P) <br> in 1 Watt resolution | 1-0:2.7.0.255 | 2 Value | 3 Register | F5(3,3), tag 18 | kW |
-| Number of power <br> failures in any <br> phase | 0-0:96.7.21.255 | 2 Value | 1 Data | F5(0,0), tag 18 | |
-| Number of long <br> power failures in <br> any phase | 0-0:96.7.9.255 | 2 Value | 1 Data | F5(0,0), tag 18 | |
+| Version information for P1 output | 1-3:0.2.8.255 | 2 | 1 Data | S2, tag 9 | |
+| Date-time stamp of the P1 message | 0-0:1.0.0.255 | 2 | 8 | TST | YYMMDDhhmmssX |
+| Equipment identifier | 0-0:96.1.1.255 | 2 Value | 1 Data | Sn (n=0..96), tag 9 | |
+| Meter Reading electricity delivered to client (Tariff 1) in 0,001 kWh | 1-0:1.8.1.255 | 2 Value | 3 Register | F9(3,3), tag 6 | kWh |
+| Meter Reading electricity delivered to client (Tariff 2) in 0,001 kWh | 1-0:1.8.2.255 | 2 Value | 3 Register | F9(3,3), tag 6 | kWh |
+| Meter Reading electricity delivered by client (Tariff 1) in 0,001 kWh |1-0:2.8.1.255 | 2 Value | 3 Register | F9(3,3), tag 6 | kWh |
+| Meter Reading electricity delivered by client (Tariff 2) in 0,001 kWh |1-0:2.8.2.255 | 2 Value | 3 Register | F9(3,3), tag 6 | kWh |
+| Tariff indicator electricity. The tariff indicator can also be used to switch tariff dependent loads e.g boilers. This is the responsibility of the P1 user | 0-0:96.14.0.255 | 2 Value | 1 Data | S4, tag 9 | |
+| Actual electricity power delivered (+P) in 1 Watt resolution | 1-0:1.7.0.255 | 2 Value | 3 Register | F5(3,3), tag 18 | kW |
+| Actual electricity power received (-P) in 1 Watt resolution | 1-0:2.7.0.255 | 2 Value | 3 Register | F5(3,3), tag 18 | kW |
+| Number of power failures in any phase | 0-0:96.7.21.255 | 2 Value | 1 Data | F5(0,0), tag 18 | |
+| Number of long power failures in any phase | 0-0:96.7.9.255 | 2 Value | 1 Data | F5(0,0), tag 18 | |
 | Power Failure Event Log (long power failures) | 1-0:99.97.0.255 | 2 Buffer | 7 Profile Generic | TST, F10(0,0) - tag 6 Format applicable for the value within the log (OBIS code 0-0:96.7.19.255) | Timestamp (end of failure) – duration in seconds |
 | Number of voltage sags in phase L1 | 1-0:32.32.0.255 | 2 Value | 1 Data | F5(0,0), tag 18 |
 | Number of voltage sags in phase L2 | 1-0:52.32.0.255 | 2 Value | 1 Data | F5(0,0), tag 18 |

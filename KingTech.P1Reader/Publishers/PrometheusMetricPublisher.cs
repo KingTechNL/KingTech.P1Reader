@@ -2,15 +2,15 @@
 using KingTech.P1Reader.Message;
 using Prometheus;
 
-namespace KingTech.P1Reader.Services;
+namespace KingTech.P1Reader.Publishers;
 
 /// <summary>
 /// This service adds p1 metrics to the prometheus metrics endpoint.
 /// A unique metric is added for every numeric value in the P1 spec.
 /// </summary>
-public class MetricService
+public class PrometheusMetricPublisher
 {
-    private readonly ILogger<MetricService> _logger;
+    private readonly ILogger<PrometheusMetricPublisher> _logger;
     private readonly IMessageBroker<P1Message> _messageBroker;
 
     private Gauge _versionInformation;
@@ -51,7 +51,7 @@ public class MetricService
     /// </summary>
     /// <param name="logger"><see cref="ILogger"/> for this service.</param>
     /// <param name="messageBroker">The <see cref="IP1Receiver"/> to subscribe to new P1 messages.</param>
-    public MetricService(ILogger<MetricService> logger, IMessageBroker<P1Message> messageBroker)
+    public PrometheusMetricPublisher(ILogger<PrometheusMetricPublisher> logger, IMessageBroker<P1Message> messageBroker)
     {
         _logger = logger;
         _messageBroker = messageBroker;
@@ -78,7 +78,7 @@ public class MetricService
     /// <summary>
     /// Set values for metric endpoints.
     /// </summary>
-    /// <param name="p1Message"></param>
+    /// <param name="p1Message">The <see cref="P1Message"/> to set values for.</param>
     private void SetValues(P1Message? p1Message)
     {
         if (p1Message == null)
@@ -221,10 +221,22 @@ public class MetricService
         }
     }
 
-    private class ModbusMetrics
+    /// <summary>
+    /// Internal modbus metrics model.
+    /// </summary>
+    private record ModbusMetrics
     {
+        /// <summary>
+        /// The modbus device type.
+        /// </summary>
         public Gauge ModbusDeviceType;
+        /// <summary>
+        /// The timestamp of the last measurement for this device.
+        /// </summary>
         public Gauge ModbusCaptureTime;
+        /// <summary>
+        /// The value that was measured.
+        /// </summary>
         public Gauge ModbusValue;
     }
 }

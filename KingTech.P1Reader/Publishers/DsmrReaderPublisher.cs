@@ -1,28 +1,37 @@
-﻿using Flurl.Http;
+﻿using System.Globalization;
+using Flurl.Http;
 using Flurl.Http.Configuration;
 using KingTech.P1Reader.Broker;
 using KingTech.P1Reader.Message;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Globalization;
 
-namespace KingTech.P1Reader.Services;
+namespace KingTech.P1Reader.Publishers;
 
 /// <summary>
 /// This service is used to publish incoming messages to the DSMR Reader.
 /// This way the P1Reader can be used as a remote agent for the official DSMR reader software.
 /// https://github.com/dsmrreader/dsmr-reader
 /// </summary>
-public class DsmrReaderPublisherService
+public class DsmrReaderPublisher
 {
-    private readonly ILogger<DsmrReaderPublisherService> _logger;
+    private readonly ILogger<DsmrReaderPublisher> _logger;
     private readonly DsmrReaderPublisherSettings _settings;
     private readonly IMessageBroker<P1Message> _messageBroker;
     private readonly IFlurlClient _dsmrClient;
     
     private readonly CancellationTokenSource _cancellationTokenSource;
 
-    public DsmrReaderPublisherService(ILogger<DsmrReaderPublisherService> logger, 
+    /// <summary>
+    /// This service is used to publish incoming messages to the DSMR Reader.
+    /// This way the P1Reader can be used as a remote agent for the official DSMR reader software.
+    /// https://github.com/dsmrreader/dsmr-reader
+    /// </summary>
+    /// <param name="logger">The <see cref="ILogger"/> for this publisher.</param>
+    /// <param name="settings">The <see cref="DsmrReaderPublisherSettings"/> containing the connection details.</param>
+    /// <param name="messageBroker">The <see cref="IMessageBroker{TMessage}"/> to subscribe to incoming P1 messages.</param>
+    /// <param name="clientFactory">An <see cref="IFlurlClientFactory"/> to create new HTTP clients.</param>
+    public DsmrReaderPublisher(ILogger<DsmrReaderPublisher> logger, 
         DsmrReaderPublisherSettings settings, IMessageBroker<P1Message> messageBroker, 
         IFlurlClientFactory clientFactory)
     {
@@ -33,6 +42,9 @@ public class DsmrReaderPublisherService
         _cancellationTokenSource = new CancellationTokenSource();
     }
 
+    /// <summary>
+    /// Start pushing received P1 messages to the DSMR reader API.
+    /// </summary>
     public void Start()
     {
         if (_settings?.Host == null || _settings?.ApiKey == null)
@@ -41,12 +53,20 @@ public class DsmrReaderPublisherService
         _messageBroker.SubscribeASync(PushData);
     }
 
+    /// <summary>
+    /// Stop pushing received P1 messages to the DSMR reader API.
+    /// </summary>
     public void Stop()
     {
         _cancellationTokenSource.Cancel();
         _messageBroker.UnsubscribeASync(PushData);
     }
 
+    /// <summary>
+    /// Push the given P1 message to the DSMR reader API.
+    /// </summary>
+    /// <param name="message">The message to push.</param>
+    /// <returns></returns>
     private async Task PushData(P1Message? message)
     {
         //Check if publisher is ready to call DSMR reader.
@@ -295,10 +315,23 @@ public class DsmrReaderPublisherService
     }
 }
 
+/// <summary>
+/// Connection settings to push data to DSMR reader.
+/// </summary>
 public class DsmrReaderPublisherSettings
 {
+    /// <summary>
+    /// The host url of the DSMR reader.
+    /// e.g. http://192.168.1.91:7777
+    /// </summary>
     public string? Host { get; set; }
+    /// <summary>
+    /// The API key for authorizing with the DSMR reader API.
+    /// </summary>
     public string? ApiKey { get; set; }
-
+    /// <summary>
+    /// Timeout for API calls.
+    /// Default = 3 seconds.
+    /// </summary>
     public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(3);
 }

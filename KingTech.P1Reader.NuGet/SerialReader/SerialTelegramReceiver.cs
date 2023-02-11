@@ -4,15 +4,25 @@ using Microsoft.Extensions.Logging;
 
 namespace KingTech.P1Reader.SerialReader;
 
-internal class SerialReader : ISerialReader
+/// <summary>
+/// <inheritdoc cref="ITelegramReceiver"/>
+/// This implementation reads incoming messages from a serial port.
+/// </summary>
+internal class SerialTelegramReceiver : ITelegramReceiver
 {
     private SerialPort _serialPort;
-    private readonly ILogger<SerialReader>? _logger;
+    private readonly ILogger<SerialTelegramReceiver>? _logger;
     private Action<string> _onMessageReceived;
 
     private StringBuilder _messageBuilder;
 
-    public SerialReader(ILogger<SerialReader>? logger, string portName, Action<string> onMessageReceived)
+    /// <summary>
+    /// Telegram reader to receive incoming messages from a serial port.
+    /// </summary>
+    /// <param name="logger">The <see cref="ILogger"/> for this receiver.</param>
+    /// <param name="portName">The name of the serial port to listen on. E.g. 'COM1', '/dev/ttyUSB0'.</param>
+    /// <param name="onMessageReceived">The action to invoke for each new message.</param>
+    public SerialTelegramReceiver(ILogger<SerialTelegramReceiver>? logger, string portName, Action<string> onMessageReceived)
     {
         _logger = logger;
         _onMessageReceived = onMessageReceived;
@@ -29,6 +39,7 @@ internal class SerialReader : ISerialReader
         _logger?.LogInformation("Serial reader initialized for port {@SerialPort}.", _serialPort);
     }
 
+    /// <inheritdoc/>
     public bool Start()
     {
         try
@@ -45,6 +56,7 @@ internal class SerialReader : ISerialReader
         }
     }
 
+    /// <inheritdoc/>
     public bool Stop()
     {
         try

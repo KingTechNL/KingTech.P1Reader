@@ -14,7 +14,7 @@ public abstract class ABaseP1Receiver : IP1Receiver
     protected readonly ILogger<ABaseP1Receiver>? Logger;
     private readonly IP1Parser _parser;
 
-    private readonly ISerialReader _serialReader;
+    private readonly ITelegramReceiver _telegramReceiver;
 
     /// <summary>
     /// The P1 receiver is responsible for receiving and parsing P1 messages using the given configuration.
@@ -26,21 +26,21 @@ public abstract class ABaseP1Receiver : IP1Receiver
         Logger = loggerFactory?.CreateLogger<ABaseP1Receiver>();
 
         _parser = GetParser(settings.Format);
-        _serialReader = settings.SerialPort.ToUpper() == "DUMMY"
-            ? new SerialReader.DummyReader(loggerFactory?.CreateLogger<DummyReader>(), HandleTelegram)
-            : new SerialReader.SerialReader(loggerFactory?.CreateLogger<SerialReader.SerialReader>(), settings.SerialPort, HandleTelegram);
+        _telegramReceiver = settings.SerialPort.ToUpper() == "DUMMY"
+            ? new SerialReader.DummyTelegramReceiver(loggerFactory?.CreateLogger<DummyTelegramReceiver>(), HandleTelegram)
+            : new SerialReader.SerialTelegramReceiver(loggerFactory?.CreateLogger<SerialReader.SerialTelegramReceiver>(), settings.SerialPort, HandleTelegram);
     }
 
     /// <inheritdoc/>
     public virtual void Start()
     {
-        _serialReader.Start();
+        _telegramReceiver.Start();
     }
 
     /// <inheritdoc/>
     public virtual void Stop()
     {
-        _serialReader.Stop();
+        _telegramReceiver.Stop();
     }
 
     /// <summary>

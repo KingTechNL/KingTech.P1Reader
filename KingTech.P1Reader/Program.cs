@@ -2,7 +2,7 @@ using Flurl.Http.Configuration;
 using KingTech.P1Reader;
 using KingTech.P1Reader.Broker;
 using KingTech.P1Reader.Message;
-using KingTech.P1Reader.Services;
+using KingTech.P1Reader.Publishers;
 using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,11 +19,11 @@ builder.Configure<P1ReceiverSettings>(new P1ReceiverSettings());
 builder.Services.AddSingleton<IP1Receiver, BrokerP1Receiver>();
 builder.Services.AddSingleton<IMessageBroker<P1Message>, GenericMessageBroker<P1Message>>();
 // Register prometheus metrics service.
-builder.Services.AddSingleton<MetricService>();
+builder.Services.AddSingleton<PrometheusMetricPublisher>();
 // Register DSMR reader publisher.
 builder.Configure<DsmrReaderPublisherSettings>(new DsmrReaderPublisherSettings());
 builder.Services.AddSingleton<IFlurlClientFactory, DefaultFlurlClientFactory>();
-builder.Services.AddSingleton<DsmrReaderPublisherService>();
+builder.Services.AddSingleton<DsmrReaderPublisher>();
 
 var app = builder.Build();
 
@@ -46,13 +46,13 @@ app.MapControllers();
 var lifeTime = app.Services.GetService<IHostApplicationLifetime>();
 lifeTime?.ApplicationStarted.Register(() => {
     app.Services.GetService<IP1Receiver>()?.Start();
-    app.Services.GetService<MetricService>()?.Start();
-    app.Services.GetService<DsmrReaderPublisherService>()?.Start();
+    app.Services.GetService<PrometheusMetricPublisher>()?.Start();
+    app.Services.GetService<DsmrReaderPublisher>()?.Start();
 });
 lifeTime?.ApplicationStopping.Register(() => {
     app.Services.GetService<IP1Receiver>()?.Stop();
-    app.Services.GetService<MetricService>()?.Stop();
-    app.Services.GetService<DsmrReaderPublisherService>()?.Stop();
+    app.Services.GetService<PrometheusMetricPublisher>()?.Stop();
+    app.Services.GetService<DsmrReaderPublisher>()?.Stop();
 });
 
 //Start web application.

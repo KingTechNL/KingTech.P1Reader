@@ -160,6 +160,12 @@ internal class V502Parser : ABaseP1Parser
             });
     }
 
+    /// <summary>
+    /// Get the indexes of all modbus devices.
+    /// </summary>
+    /// <param name="keys">A list of all keys in the P1 message.</param>
+    /// <param name="regex">The regex to isolate the index in the given keys (in group 1)</param>
+    /// <returns>A list of all indexes for the modbus devices.</returns>
     private List<string> GetMbusDeviceIndexes(List<string> keys, Regex regex)
     {
         var indexes = new List<string>();

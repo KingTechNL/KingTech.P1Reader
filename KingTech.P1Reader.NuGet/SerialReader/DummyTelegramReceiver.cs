@@ -3,21 +3,34 @@ using Microsoft.Extensions.Logging;
 
 namespace KingTech.P1Reader.SerialReader;
 
-internal class DummyReader : ISerialReader
+/// <summary>
+/// <inheritdoc cref="ITelegramReceiver"/>
+/// This implementation generates hardcoded messages for testing purposes.
+/// </summary>
+internal class DummyTelegramReceiver : ITelegramReceiver
 {
-    private ILogger<DummyReader>? _logger { get; }
+    private ILogger<DummyTelegramReceiver>? _logger { get; }
     private Action<string> _onMessageReceived;
     private Thread _thread;
     private bool _isRunning = false;
 
-    public DummyReader(ILogger<DummyReader>? logger, Action<string> onMessageReceived)
+    /// <summary>
+    /// A dummy reader that creates hardcoded messages for testing purposes.
+    /// </summary>
+    /// <param name="logger">The <see cref="ILogger"/> for this reader.</param>
+    /// <param name="onMessageReceived">The action to invoke for each new message.</param>
+    public DummyTelegramReceiver(ILogger<DummyTelegramReceiver>? logger, Action<string> onMessageReceived)
     {
         _logger = logger;
         _onMessageReceived = onMessageReceived;
 
         _logger?.LogWarning("Using Dummy reader. No real data will be used.");
     }
-    
+
+    /// <summary>
+    /// Start generating messages.
+    /// </summary>
+    /// <returns>True on success, false otherwise.</returns>
     public bool Start()
     {
         _logger?.LogInformation("Starting Dummy reader...");
@@ -28,6 +41,10 @@ internal class DummyReader : ISerialReader
         return true;
     }
 
+    /// <summary>
+    /// Stop generating messages.
+    /// </summary>
+    /// <returns>True on success, false otherwise.</returns>
     public bool Stop()
     {
         _logger?.LogInformation("Stopping Dummy reader...");
@@ -37,6 +54,10 @@ internal class DummyReader : ISerialReader
         return true;
     }
 
+    /// <summary>
+    /// While _isRunning is true, generate a new message each 5 seconds and invokes the
+    /// Action provided in the constructor.
+    /// </summary>
     private void CreateDummyMessage()
     {
         while (_isRunning)

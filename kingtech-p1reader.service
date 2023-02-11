@@ -1,0 +1,15 @@
+[Unit]
+Description=Service that keeps running the KingTech P1 reader from startup.
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/home/pi/p1reader/KingTech.P1Reader
+WorkingDirectory=/home/pi/p1reader/
+Restart=always
+RestartSec=5
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=%n
